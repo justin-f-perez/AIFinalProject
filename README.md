@@ -1,1 +1,3 @@
 # AIFinalProject
+## Members
+Justin Perez
