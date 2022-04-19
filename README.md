@@ -1,5 +1,5 @@
 # AIFinalProject
 ## Members
 Justin Perez<br>
-Levin Leesemann
-Melissa Krumm
+Levin Leesemann<br>
+Melissa Krumm<br>
