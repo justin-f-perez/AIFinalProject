@@ -1,4 +1,4 @@
-# AIFinalProject
+# Final Project
 ## Members
 Justin Perez<br>
 Levin Leesemann<br>
