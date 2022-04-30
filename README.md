@@ -17,7 +17,7 @@
     * `N` in a row for an `MxN` rectangle where `N<=M`, or
     * number in a row is generalized (make it a parameter for game initialization)?
 * we already know that two perfect players playing under standard rules always draw
-  * my intuition is any generalization we come up with will lead to "first player" always wins or "it's always possible to draw"
+  * rules of games like this tend to lead to optimal solutions where "first player wins" or "perfect adversaries always draw"- not very interesting
 
 **misc:**
 
