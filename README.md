@@ -66,20 +66,23 @@ def net_score(players: tuple[Player, Player]):
 
 <strong> analysis </strong>
 
-So basically, get 1 point for each winning combo that your play contributes to, but only if opponent isn't blocking
-Example boards ((2x2) board where N=2 to win)
-Gross Score (X): There are 3x winnable combos containing X's only position, so X gets 3 points. 
-Gross Score (O): O has no positions, and therefore gets 0 points.
-net_score('X'): 3
+* So basically, get 1 point for each winning combo that your play contributes to, but only if opponent isn't blocking
+* Example boards ((2x2) board where N=2 to win)
+* Gross Score (X): There are 3x winnable combos containing X's only position, so X gets 3 points. 
+* Gross Score (O): O has no positions, and therefore gets 0 points.
+* net_score('X'): 3
 ```
 X | 
 -----
   |
 ```
 
-Gross Score: 2 for both players (1x winnable combo starting from (0,0); top-left to top-right is blocked for both players. Both players have 3 potentials combos, where 1 is blocked)
-net_score('X'): 0
-Suppose X is going next. X needs to decide which position to choose. Either position results in 'infinity' score (win). Both positions are equally good. The agent may break ties arbitrarily.
+* Gross Score: 2 for both players (1x winnable combo starting from (0,0); top-left to top-right is blocked for both players. Both players have 3 potentials combos, where 1 is blocked)
+* net_score('X'): 0
+* Suppose X is going next
+  * X needs to decide which position to choose
+  * Either position results in 'infinity' score (win)
+  * Both positions are equally good (agent could break ties arbitrarily)
 ```
 X | O
 -----
