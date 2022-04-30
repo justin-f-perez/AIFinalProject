@@ -112,11 +112,15 @@ Using above functions, a time-bounded minimax agent could perform IDS search on 
   * Maybe this is actually a pro... (see 'stretch goals' in 'pros')
 
 ## Connect four (Reinforcement learning)
-Pros:
+
+**Pros:**
+
 * game state has natural grid representation where each cell takes one of 3 state (`empty` vs `red` vs `black`)
   * checking if game state is valid (no floating pieces) is computationally in-expensive
 * alternatively can be represented as array of lists where each list represents pieces w/ head of list=bottom (appending new pieces as they're "dropped" into the column)
-Cons:
+
+**Cons:**
+
 * like tic-tac-toe, too easy to brute-force & would require generalization (but *how* is unclear):
   * lifting restriction that pieces are placed on bottom?
   * bigger "board"?
@@ -124,13 +128,17 @@ Cons:
   * unclear which of the above would make the game non-trivial
 
 ## Snake(Reinforcement Learning)
-Pros:
+
+**Pros:**
+
 * non-trivial game (exponential state space)
 * fun to visualize
 * interesting properties not really seen in pacman:
   * interaction with environment causes agent itself to change (i.e., eating food -> grow)
   * agent is its own worst enemy (easy to lose by blocking self in/eating self)
-cons:
+
+**cons:**
+
 * not representable by a grid alone (snake spans multiple cells)
   * however, trivially solved: snake = linked list. on each game update, prepend `Cell.at(snake.position, snake.current_direction)` to snake list. If snake did not eat during this update, pop tail element. (i.e., grow by one if we ate, otherwise we're just moving by removing the segment at the tail position and adding one to the head)
 * probably not suitable for search strategies (number of branches that can be pruned e.g. via minimax won't make up for the long number of timesteps required to complete the game; the search tree is very very large and once the snake is long enough it's not clear we can compute a strategy where the snake doesn't block itself in within a reasonable amount of time)
