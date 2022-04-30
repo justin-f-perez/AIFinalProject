@@ -13,7 +13,7 @@
   * game board need to be square, or can be rectangle?
   * what are the winning conditions?
     * still 3 in a row, or
-    * `N` in a row for an `NxN`` square, or
+    * `N` in a row for an `NxN` square, or
     * `N` in a row for an `MxN` rectangle where `N<=M`, or
     * number in a row is generalized (make it a parameter for game initialization)?
 * we already know that two perfect players playing under standard rules always draw
