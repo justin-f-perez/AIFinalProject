@@ -1,14 +1,5 @@
-# Final Project
-## Members
-Justin Perez<br>
-Levin Leesemann<br>
-Melissa Krumm<br>
-Miaomiao Zou
-## Documents
-[Project Report](https://docs.google.com/document/d/14OXp7eeJq8z1no57VwKUTgWbHgY5yk8jf76AjHZQZYQ/edit?usp=sharing)<br>
-
-## Project Ideas (Most preferred to least preferred)
-### Tic-tac-toe (Reinforcement learning | Minimax)
+# Project Ideas (Most preferred to least preferred)
+## Tic-tac-toe (Reinforcement learning | Minimax)
 
 Pros:
 * game state has natural grid representation where each cell is in one of 3 states (`empty` vs. `X`'s vs `O`'s)
@@ -30,7 +21,7 @@ misc:
 
 <details>
 <summary>
-Search cost/heuristic function thoughts ( click to expand )
+ <h3>tic-tac-toe (generalized) search cost/heuristic function thoughts (CLICK TO EXPAND)</h3>
 </summary>
 
 <strong> design </strong>
@@ -97,7 +88,7 @@ Using above functions, a time-bounded minimax agent could perform IDS search on 
 
 </details>
 
-### Minesweeper (Reinforcement learning)
+## Minesweeper (Reinforcement learning)
 pros:
 * already sufficiently hard problem (NP-complete, can't be bruteforced for non-trivial board sizes)
 * game state can be naturally represented by sparse matrices (which may just be a list of coordinates):
@@ -116,7 +107,7 @@ cons:
   * or do we only care about solving?
   * Maybe this is actually a pro... 
 
-### Connect four (Reinforcement learning)
+## Connect four (Reinforcement learning)
 Pros:
 * game state has natural grid representation where each cell takes one of 3 state (`empty` vs `red` vs `black`)
   * checking if game state is valid (no floating pieces) is computationally in-expensive
@@ -128,7 +119,7 @@ Cons:
   * winning condition requires different # in a row?
   * unclear which of the above would make the game non-trivial
 
-### Snake(Reinforcement Learning)
+## Snake(Reinforcement Learning)
 Pros:
 * non-trivial game (exponential state space)
 * fun to visualize
@@ -138,7 +129,7 @@ cons:
 * probably not suitable for search strategies (number of branches that can be pruned e.g. via minimax won't make up for the long number of timesteps required to complete the game; the search tree is very very large)
 * scoring function and agent properties not obvious (should it optimize to grow fast, or do we only care that it grows eventually and doesn't lose?)
 
-### Battleship (Reinforcement learning | Minimax)
+## Battleship (Reinforcement learning | Minimax)
 Pros:
 Cons:
 * game state can't be represented by a grid alone (ships span multiple cells)
@@ -153,16 +144,13 @@ Cons:
           * is this even interesting? I don't think so...
         * learning agents: could be hard to do right. do we always train against the current version of our AI? it might get stuck in weird local minima, e.g., evolving to choose the worst possible placement strategy so that every game is a quick win or quick loss
 * cost function could be hard to design (all hits worth the same? sinking ship give extra points? small ships worth more than big ships?:)
-      
 
+# Final Project
+## Members
+Justin Perez<br>
+Levin Leesemann<br>
+Melissa Krumm<br>
+Miaomiao Zou
+## Documents
+[Project Report](https://docs.google.com/document/d/14OXp7eeJq8z1no57VwKUTgWbHgY5yk8jf76AjHZQZYQ/edit?usp=sharing)<br>
 
-Member Availability (Anything until 7:00pm)
-
-| member availability | Monday                                    | Tuesday       | Wednesday                           | Thursday                      | Friday                              |
-|:--------------------|:------------------------------------------|:--------------|:------------------------------------|:------------------------------|:------------------------------------|
-| Levin               | 13:00 - 15:00                             | Not available | 12:00 - 7:00                        | Not available                 | 12:00 - 7:00                        |
-| Melissa             | Not available                             | After 17:00   | Any time                            | After 17:00                   | Any time                            |
-| Miaomiao            | 12:30 - 18:30                             | 8:00 - 11:00  | 12:30 - 18:30                       | 8:00 - 11:00                  | 10:30 - 18:30                       |
-| Justin              | 10:00-13:00 <br /> 14:00-18:00 <br />(\*) | 8:00-14:00    | 10:00-13:00 <br /> 14:00-18:00 (\*) | 8:00-10:00 <br /> 11:00-14:00 | before 12:00 <br /> after 15:00 (\*) |
-
-*I could probably make the trip to iowa city during these (zoom only) times but it’s an extra 2 hours of commuting for me
