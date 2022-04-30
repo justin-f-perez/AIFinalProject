@@ -1,11 +1,13 @@
 # Project Ideas (Most preferred to least preferred)
 ## Tic-tac-toe (Reinforcement learning | Minimax)
 
-Pros:
+**Pros:**
+
 * game state has natural grid representation where each cell is in one of 3 states (`empty` vs. `X`'s vs `O`'s)
 * natural representation for SMT solver
 
-Cons:
+**Cons:**
+
 * too trivial, must be generalized, but *how* unclear:
   * obviously need to allow boards bigger than 3x3...
   * game board need to be square, or can be rectangle?
@@ -17,11 +19,11 @@ Cons:
 * we already know that two perfect players playing under standard rules always draw
   * my intuition is any generalization we come up with will lead to "first player" always wins or "it's always possible to draw"
 
-misc:
+**misc:**
 
 <details>
 <summary>
- <h3>tic-tac-toe (generalized) search cost/heuristic function thoughts (CLICK TO EXPAND)</h3>
+ <ul><li><h3>tic-tac-toe (generalized) search cost/heuristic function thoughts (CLICK TO EXPAND)</h3></li></ul>
 </summary>
 
 <strong> design </strong>
@@ -84,12 +86,14 @@ X | O
   |  
 ```
 
-Using above functions, a time-bounded minimax agent could perform IDS search on the state space to choose an optimal strategy.
+Using above functions, a time-bounded minimax agent could perform IDS search on the state space to choose the best strategy it can within the time constraint given.
 
 </details>
 
 ## Minesweeper (Reinforcement learning)
-pros:
+
+**pros:**
+
 * already sufficiently hard problem (NP-complete, can't be bruteforced for non-trivial board sizes)
 * game state can be naturally represented by sparse matrices (which may just be a list of coordinates):
   * matrix 1: guesses (game ends when you hit a mine, so we don't need to remember `guessed & mine` vs `guessed & missed`)
@@ -101,11 +105,11 @@ pros:
   1. start w/ just solving safely (make agent choose a position each turn, agent is rewarded for each move it makes without 'dying')
   2. more complex cost functions to make trade-offs between # of moves and safety, e.g., higher reward for clicks revealing more new information
 
-cons:
+**cons:**
 * scoring function maybe a little unclear:
   * should AI attempt to minimize # of moves
   * or do we only care about solving?
-  * Maybe this is actually a pro... 
+  * Maybe this is actually a pro... (see 'stretch goals' in 'pros')
 
 ## Connect four (Reinforcement learning)
 Pros:
@@ -123,15 +127,21 @@ Cons:
 Pros:
 * non-trivial game (exponential state space)
 * fun to visualize
+* interesting properties not really seen in pacman:
+  * interaction with environment causes agent itself to change (i.e., eating food -> grow)
+  * agent is its own worst enemy (easy to lose by blocking self in/eating self)
 cons:
 * not representable by a grid alone (snake spans multiple cells)
   * however, trivially solved: snake = linked list. on each game update, prepend `Cell.at(snake.position, snake.current_direction)` to snake list. If snake did not eat during this update, pop tail element. (i.e., grow by one if we ate, otherwise we're just moving by removing the segment at the tail position and adding one to the head)
-* probably not suitable for search strategies (number of branches that can be pruned e.g. via minimax won't make up for the long number of timesteps required to complete the game; the search tree is very very large)
+* probably not suitable for search strategies (number of branches that can be pruned e.g. via minimax won't make up for the long number of timesteps required to complete the game; the search tree is very very large and once the snake is long enough it's not clear we can compute a strategy where the snake doesn't block itself in within a reasonable amount of time)
 * scoring function and agent properties not obvious (should it optimize to grow fast, or do we only care that it grows eventually and doesn't lose?)
 
 ## Battleship (Reinforcement learning | Minimax)
-Pros:
-Cons:
+
+**Pros:**
+
+**Cons:**
+
 * game state can't be represented by a grid alone (ships span multiple cells)
 * problem definition is unclear
   * just battle phase, or solve placement phase too?
