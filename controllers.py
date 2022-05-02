@@ -59,4 +59,11 @@ class Agent(Controller):
     }
 
     def get_action(self):
+        # for some reason game window doesn't render if we don't consume the event queue
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                # ESC = Quit
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
         return self.next_direction[self.game.snake.direction]

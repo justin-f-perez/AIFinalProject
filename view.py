@@ -1,4 +1,5 @@
 import abc
+import logging
 import random
 import sys
 import time
@@ -26,6 +27,7 @@ class GraphicsGameView(GameView):
         )
         self.segment_width = screen_width / self.game.grid_width
         self.segment_height = screen_height / self.game.grid_height
+        logging.debug("GraphicsGameView initialized")
 
     def update(self):
         self.draw()
@@ -107,5 +109,8 @@ class GraphicsGameView(GameView):
 
 
 class HeadlessGameView(GameView):
+    def __init__(self):
+        logging.debug("HeadlessGameView initialized")
+
     def update(self):
         pass
