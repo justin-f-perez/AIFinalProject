@@ -1,3 +1,9 @@
+# USAGE:
+# This works whether you've ever installed this environment before or not,
+# and whether dependencies have been added, changed, or removed since last run.
+#
+#   conda env update --file=environment.yml --prune
+#
 ---
 name: ai-final
 channels:
@@ -9,3 +15,9 @@ dependencies:
       - pygame
       - pre-commit
       - mypy
+      - flake8
+      - black
+      - nb_black  # run black auto-formatter in jupyter notebook
+      - jupyterlab  # run python/markdown notebooks
+      - jupyterlab-lsp  # language server protocol client for jupyterlab
+      - jedi-language-server  # language server for python

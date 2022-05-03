@@ -4,12 +4,20 @@ default_language_version:
   python: python3.10
 
 repos:
+  # clears outputs from notebook
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.5.0
+    hooks:
+      - id: nbstripout
+
+  # modernizes python syntax automatically in a safe way
   - repo: https://github.com/asottile/pyupgrade
     rev: 'v2.32.0'
     hooks:
       - id: pyupgrade
         args: ['--py310-plus']
 
+  # runs type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v0.950'
     hooks:
@@ -17,6 +25,7 @@ repos:
         additional_dependencies:
           - pygame
 
+  # "lints" (i.e., check for common problems/errors/code smells)
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
     hooks:
@@ -25,12 +34,25 @@ repos:
           - flake8-bugbear
           - flake8-comprehensions
 
+  # auto sort python imports
+  # prevents bike-shedding
+  # prevents code churn that can lead to merge conflicts
   - repo: https://github.com/pycqa/isort
     rev: 5.10.1
     hooks:
       - id: isort
         name: isort (python)
 
+  # auto format python code before commits
+  # prevents bike-sheddding
+  # prevents code churn that can lead to merge conflicts
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        exclude: migrations/
+
+  # misc file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.2.0
     hooks:
@@ -43,13 +65,8 @@ repos:
       - id: debug-statements
       - id: end-of-file-fixer
 
+  # forbid Windows-style newlines
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.1.13
     hooks:
       - id: forbid-crlf
-
-  - repo: https://github.com/psf/black
-    rev: 22.3.0
-    hooks:
-      - id: black
-        exclude: migrations/

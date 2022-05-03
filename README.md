@@ -1,4 +1,3 @@
-
 # Setup
 ## Create a conda environment
 ```console
@@ -26,7 +25,14 @@ conda activate ai-final
 NOTE: The current agent implementation is an extremely simple proof of concept that just spins in a circle.
 ```console
 conda activate ai-final
-./cli.py --agent
+./cli.py --agent --graphics
+```
+
+## Training mode
+For reinforcement learning, you may want to run the game as fast as your computer will allow without rendering any graphics. Use `--headless` to disable graphics, use `--frame-rate 0` to disable update throttling.
+```console
+conda activate ai-final
+./cli.py --agent --headless --frame-rate 0
 ```
 
 
