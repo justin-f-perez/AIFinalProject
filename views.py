@@ -109,7 +109,7 @@ class GraphicsGameView(GameView):
 
 
 class HeadlessGameView(GameView):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         logging.debug("HeadlessGameView initialized")
 
     def update(self):

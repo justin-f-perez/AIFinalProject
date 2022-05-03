@@ -32,6 +32,7 @@ class Snake:
         elif self.direction == Direction.RIGHT:
             new_x += 1
         self._segments.insert(0, Coordinate(X=new_x, Y=new_y))
+        logging.debug(f"Snake moved: {grow=} {self.head=}")
 
     @property
     def direction(self):

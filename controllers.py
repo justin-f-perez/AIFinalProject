@@ -1,11 +1,12 @@
 import abc
+import importlib
 import sys
 
 import pygame
 
 from game import Game
 from utils import Direction
-from view import GameView
+from views import GameView, HeadlessGameView
 
 
 class Controller(abc.ABC):
@@ -51,12 +52,40 @@ class Keyboard(Controller):
 
 
 class Agent(Controller):
-    next_direction = {
-        Direction.UP: Direction.RIGHT,
-        Direction.RIGHT: Direction.DOWN,
-        Direction.DOWN: Direction.LEFT,
-        Direction.LEFT: Direction.UP,
-    }
+    def __init__(
+        self,
+        agent_class,
+        agent_args=(),
+        agent_kwargs=None,
+        game_view: GameView = None,
+        *args,
+        **kwargs,
+    ):
+        """Same init logic as Controller base class, but...
+
+        * provides a default headless game view
+        * accepts arguments for initializing an AI agent:
+            * agent_class: should be a class or python module path, e.g., "agents.SpinnerAgent"
+            * agent_args: an iterable of positional arguments to pass to the agent
+            * agent_args: an mapping of keyword arguments to pass to the agent
+        * Agent class given by agent_class should implement a get_action(self, game) method
+        """
+        super().__init__(game_view=game_view or HeadlessGameView(), *args, **kwargs)  # type: ignore
+        if isinstance(agent_class, str):
+            try:
+                AgentClass = importlib.import_module(agent_class)
+            except ModuleNotFoundError:
+                module_path, class_name = (
+                    ".".join((parts := agent_class.split("."))[:-1]),
+                    parts[-1],
+                )
+                AgentModule = importlib.import_module(module_path)
+                AgentClass = getattr(AgentModule, class_name)
+        else:
+            AgentClass = agent_class
+        if agent_kwargs is None:
+            agent_kwargs = {}
+        self.agent_instance = AgentClass(*agent_args, **agent_kwargs)  # type: ignore
 
     def get_action(self):
         # for some reason game window doesn't render if we don't consume the event queue
@@ -66,4 +95,4 @@ class Agent(Controller):
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-        return self.next_direction[self.game.snake.direction]
+        return self.agent_instance.get_action(self.game)
