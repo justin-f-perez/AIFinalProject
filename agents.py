@@ -40,7 +40,8 @@ def manhattanDistance(xy1, xy2):
 # This is the agent that performs the A*search to get to the pellet
 class aStarSearch:
     def get_action(self, game: Game):
-        pass
+        actionList = self.aStarSearch(game.snake, game)
+        return actionList
 
     def aStarSearch(self, snake: Snake, game: Game, heuristic=manhattanDistance):
         frontier = PriorityQueue()
