@@ -127,9 +127,20 @@ def main():
 
     configure_logging(log_level=args.log_level)
     snake = Snake(
-        segments=[Coordinate(1, 1), Coordinate(1, 0), Coordinate(0, 0)],
+        segments=[
+            Coordinate(0, 0),
+            Coordinate(1, 0),
+            Coordinate(2, 0),
+        ],
         direction=Direction.DOWN,
     )
+    #
+    # O------
+    # |BT
+    # |H
+    # |
+    # |
+    #
     game = Game(
         food_count=args.food,
         grid_width=args.grid_width,
