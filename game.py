@@ -71,3 +71,5 @@ class Game:
                 f"{self.snake.head=} {self.snake._segments=}"
             )
         return is_game_over
+
+    # IMPLEMENT A ISGOALSTATE METHOD
