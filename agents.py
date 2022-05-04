@@ -59,3 +59,4 @@ class aStarSearch:
                     nListActions = lActions + [direction]
                     total = currcost + cost + heuristic(state, snake)
                     frontier.push((nListActions, state, currcost + cost), total)
+                    # hello i am here
