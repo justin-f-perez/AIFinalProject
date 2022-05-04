@@ -2,6 +2,7 @@ from game import Game
 from utils import Direction
 
 
+# Simple example agent that spins in a circle
 class SpinnerAgent:
     next_direction = {
         Direction.UP: Direction.RIGHT,
@@ -12,3 +13,9 @@ class SpinnerAgent:
 
     def get_action(self, game: Game):
         return self.next_direction[game.snake.direction]
+
+
+# This is the agent that performs the A*search to get to the pellet
+class AStarSearch:
+    def get_action(self, game: Game):
+        pass

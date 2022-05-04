@@ -25,6 +25,15 @@ repos:
         additional_dependencies:
           - pygame
 
+  # auto format python code before commits
+  # prevents bike-sheddding
+  # prevents code churn that can lead to merge conflicts
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        exclude: migrations/
+
   # "lints" (i.e., check for common problems/errors/code smells)
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
@@ -43,14 +52,6 @@ repos:
       - id: isort
         name: isort (python)
 
-  # auto format python code before commits
-  # prevents bike-sheddding
-  # prevents code churn that can lead to merge conflicts
-  - repo: https://github.com/psf/black
-    rev: 22.3.0
-    hooks:
-      - id: black
-        exclude: migrations/
 
   # misc file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -64,9 +65,3 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements
       - id: end-of-file-fixer
-
-  # forbid Windows-style newlines
-  - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.1.13
-    hooks:
-      - id: forbid-crlf
