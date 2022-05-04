@@ -69,6 +69,7 @@ class Agent(Controller):
             * agent_args: an iterable of positional arguments to pass to the agent
             * agent_args: an mapping of keyword arguments to pass to the agent
         * Agent class given by agent_class should implement a get_action(self, game) method
+            that returns either a single action or list of actions.
         """
         super().__init__(game_view=game_view or HeadlessGameView(), *args, **kwargs)  # type: ignore
         if isinstance(agent_class, str):
@@ -86,8 +87,13 @@ class Agent(Controller):
         if agent_kwargs is None:
             agent_kwargs = {}
         self.agent_instance = AgentClass(*agent_args, **agent_kwargs)  # type: ignore
+        self.actions: list[Direction] = []
 
     def get_action(self):
+        if self.actions:
+            # if we previously got a list of actions from the agent, use those first
+            return self.actions.pop(0)
+
         # for some reason game window doesn't render if we don't consume the event queue
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
@@ -95,4 +101,10 @@ class Agent(Controller):
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-        return self.agent_instance.get_action(self.game)
+        action_list_or_action = self.agent_instance.get_action(self.game)
+
+        # if it's just one
+        if isinstance(action_list_or_action, Direction):
+            return action_list_or_action
+        else:  # actions (plural); store to consume as a queue
+            self.actions = action_list_or_action
