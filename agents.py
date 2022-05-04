@@ -53,9 +53,9 @@ class aStarSearch:
                 return lActions
             if curNode not in closedSet:
                 closedSet.add(curNode)
-                successors = game.successors
-                for successor in successors:
-                    state, direction, cost = successor
+                success = game.successors
+                for s in success:
+                    state, direction, cost = s
                     nListActions = lActions + [direction]
                     total = currcost + cost + heuristic(state, snake)
                     frontier.push((nListActions, state, currcost + cost), total)
