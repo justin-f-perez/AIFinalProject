@@ -1,3 +1,4 @@
+import copy
 import logging
 import random
 from dataclasses import dataclass, field
@@ -19,6 +20,15 @@ class Game:
     def __post_init__(self):
         for _ in range(self.food_count):
             self.spawn_food()
+
+    @property  # type: ignore
+    def successors(self):
+        children = []
+        for direction in self.snake.direction.next():
+            child = copy.deepcopy(self)
+            child.update(direction)
+            children.append(child)
+        return children
 
     def spawn_food(self):
         """Adds a new piece of food at a random location.

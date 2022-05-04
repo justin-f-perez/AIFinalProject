@@ -18,6 +18,16 @@ class Direction(enum.Enum):
     UP = enum.auto()
     DOWN = enum.auto()
 
+    def next(self):
+        """Return next valid actions from the given action."""
+        valid = {
+            Direction.UP: {Direction.LEFT, Direction.RIGHT},
+            Direction.DOWN: {Direction.LEFT, Direction.RIGHT},
+            Direction.LEFT: {Direction.UP, Direction.DOWN},
+            Direction.RIGHT: {Direction.UP, Direction.DOWN},
+        }
+        return valid[self]
+
 
 class Coordinate(NamedTuple):
     X: int
