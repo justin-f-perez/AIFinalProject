@@ -15,7 +15,7 @@ class SpinnerAgent:
     def get_action(self, game: Game):
         return self.next_direction[game.snake.direction]
 
-class RandomAgient:
+class RandomAgent:
     ranDirection = random.choice({Direction.UP: Direction.RIGHT,
         Direction.RIGHT: Direction.DOWN,
         Direction.DOWN: Direction.LEFT,
