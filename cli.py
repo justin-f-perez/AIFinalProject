@@ -144,7 +144,9 @@ def main():
         frame_rate=args.frame_rate,
     )
     if args.keyboard:
-        controllers.Keyboard(game=game, game_view=game_view, frame_rate=args.frame_rate)
+        controller = controllers.Keyboard(
+            game=game, game_view=game_view, frame_rate=args.frame_rate
+        )
     else:
         assert args.agent
 
