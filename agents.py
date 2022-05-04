@@ -1,6 +1,7 @@
 import random
 
 from game import Game
+from snake import Snake
 from utils import Direction, PriorityQueue
 
 
@@ -41,15 +42,15 @@ class aStarSearch:
     def get_action(self, game: Game):
         pass
 
-    def aStarSearch(self, snake, game, heuristic=manhattanDistance):
+    def aStarSearch(self, snake: Snake, game: Game, heuristic=manhattanDistance):
         frontier = PriorityQueue()
         closedSet = set()
-        frontier.push(([], snake.head(), 0), 0)
+        frontier.push(([], snake.head, 0), 0)
         while True:
             if frontier.isEmpty():
                 return None
             lActions, curNode, currcost = frontier.pop()
-            if game.isGoalState(curNode):
+            if game.isGoalState():
                 return lActions
             if curNode not in closedSet:
                 closedSet.add(curNode)
