@@ -28,9 +28,15 @@ class RandomAgent:
 
 
 # Heuristic function ---
-def manhattanDistance(xy1, xy2):
+def manhattan_distance(xy1, xy2):
     "Returns the Manhattan distance between points xy1 and xy2"
     return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+
+
+def average_food_heuristic(food_list, head):
+    "Returns the Manhattan distance between points xy1 and xy2"
+    total = sum(manhattan_distance(head, food) for food in food_list)
+    return total / len(food_list)
 
 
 # Identify tail position and see if it is reachable.
@@ -43,9 +49,9 @@ class aStarSearch:
         actionList = self.aStarSearch(game.snake, game)
         return actionList
 
-    def aStarSearch(self, snake: Snake, game: Game, heuristic=manhattanDistance):
+    def aStarSearch(self, snake: Snake, game: Game, heuristic=average_food_heuristic):
         frontier = PriorityQueue()
-        closedSet = set()
+        closedSet = []
         frontier.push(([], snake.head, 0), 0)
         while True:
             if frontier.isEmpty():
@@ -54,11 +60,15 @@ class aStarSearch:
             if game.isGoalState():
                 return lActions
             if curNode not in closedSet:
-                closedSet.add(curNode)
+                closedSet.append(curNode)
                 success = game.successors
                 for s in success:
-                    state, direction, cost = s
+                    direction = s.snake.direction
+                    cost = currcost + 1
+                    if game.check_game_over():
+                        cost = float("inf")
+                    # state, direction, cost = s
                     nListActions = lActions + [direction]
-                    total = currcost + cost + heuristic(state, snake)
-                    frontier.push((nListActions, state, currcost + cost), total)
+                    total = cost + heuristic(game.food, snake.head)
+                    frontier.push((nListActions, game, cost), total)
                     # hello i am here
