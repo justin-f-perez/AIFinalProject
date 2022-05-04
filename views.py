@@ -70,6 +70,7 @@ class GraphicsGameView(GameView):
                 "Game over",
                 "Tilt!",
                 "MUERTO",
+                "404 Not Found",
             )
             game_over_surface = you_died_font.render(
                 random.choice(you_died_phrases), True, Color.RED.value
