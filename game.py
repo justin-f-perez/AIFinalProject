@@ -73,3 +73,4 @@ class Game:
         return is_game_over
 
     # IMPLEMENT A ISGOALSTATE METHOD
+    # Check to see if food is in current position
