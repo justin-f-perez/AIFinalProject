@@ -32,7 +32,6 @@ class Game:
 
     def spawn_food(self):
         """Adds a new piece of food at a random location.
-
         Ensures the new food piece doesn't overlap any existing piece.
         """
         new_food = Coordinate(
@@ -81,3 +80,11 @@ class Game:
                 f"{self.snake.head=} {self.snake._segments=}"
             )
         return is_game_over
+
+    # IMPLEMENT A ISGOALSTATE METHOD
+    # Check to see if food is in current position
+    def isGoalState(self):
+        if self.snake.head in self.food:
+            return True
+        else:
+            return False
