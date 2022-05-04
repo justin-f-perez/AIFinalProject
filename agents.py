@@ -16,13 +16,13 @@ class SpinnerAgent:
         return self.next_direction[game.snake.direction]
 
 class RandomAgient:
-    next_direction = random.choice({Direction.UP: Direction.RIGHT,
+    ranDirection = random.choice({Direction.UP: Direction.RIGHT,
         Direction.RIGHT: Direction.DOWN,
         Direction.DOWN: Direction.LEFT,
         Direction.LEFT: Direction.UP,})
     
-    def get_action(self,geame: Game):
-        return self.next_direction[game.snake.direction]
+    def get_action(self,game: Game):
+        return self.ranDirection[game.snake.direction]
 
 # This is the agent that performs the A*search to get to the pellet
 class AStarSearch:
