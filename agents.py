@@ -30,7 +30,6 @@ class RandomAgent:
 class AStarSearch:
     def get_action(self, game: Game):
         pass
-class isGoalstate: 
-    def g
+
 
 

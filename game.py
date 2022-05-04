@@ -74,5 +74,7 @@ class Game:
         return is_game_over
 
     # IMPLEMENT A ISGOALSTATE METHOD
-    def isGoalState(self) -> bool:
-        if self.snake.head in self.food:
+    def isGoalState(self):
+        if self.snake.head in self.food: return True 
+        else :return False 
+
