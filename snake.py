@@ -53,13 +53,7 @@ class Snake:
         """Returns the _new_ directions that the snake can _change_ to.
 
         Based on the snake's current direction."""
-        valid = {
-            Direction.UP: {Direction.LEFT, Direction.RIGHT},
-            Direction.DOWN: {Direction.LEFT, Direction.RIGHT},
-            Direction.LEFT: {Direction.UP, Direction.DOWN},
-            Direction.RIGHT: {Direction.UP, Direction.DOWN},
-        }
-        return valid[self.direction]
+        return self.direction.next()
 
     @property
     def head(self):

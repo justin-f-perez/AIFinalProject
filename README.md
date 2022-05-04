@@ -46,6 +46,14 @@ A convenience script is provided for starting the notebook server (dependencies 
 ./start_notebook.sh
 ```
 
+# Running test code
+
+Files prefixed with `test_` contain some test code for unit testing pieces of functionality. The part after `test_` corresponds to the implementation code being tested (e.g., `test_game.py` and `game.py`).
+
+```console
+./run_tests
+```
+
 
 # Final Project
 ## Members
