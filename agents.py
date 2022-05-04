@@ -15,11 +15,13 @@ class SpinnerAgent:
     def get_action(self, game: Game):
         return self.next_direction[game.snake.direction]
 
+#Base case comparison, does implement AI really helps snake? 
+# Or letting snake do random choice would be better?
 class RandomAgent:
-    ranDirection = random.choice({Direction.UP: Direction.RIGHT,
-        Direction.RIGHT: Direction.DOWN,
-        Direction.DOWN: Direction.LEFT,
-        Direction.LEFT: Direction.UP,})
+    ranDirection = random.choice(Direction.UP, Direction.RIGHT,
+        Direction.RIGHT, Direction.DOWN,
+        Direction.DOWN, Direction.LEFT,
+        Direction.LEFT, Direction.UP,)
     
     def get_action(self,game: Game):
         return self.ranDirection[game.snake.direction]
@@ -28,5 +30,7 @@ class RandomAgent:
 class AStarSearch:
     def get_action(self, game: Game):
         pass
+class isGoalstate: 
+    def g
 
 
