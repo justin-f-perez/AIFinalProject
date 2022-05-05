@@ -3,20 +3,29 @@ import logging
 import random
 import sys
 import time
+from typing import Any
 
 import pygame
 
+from game import Game
 from utils import Color
 
 
 class GameView(abc.ABC):
     @abc.abstractmethod
-    def update(self):
+    def update(self) -> None:
         ...
 
 
 class GraphicsGameView(GameView):
-    def __init__(self, game, caption, screen_width, screen_height, frame_rate):
+    def __init__(
+        self,
+        game: Game,
+        caption: str,
+        screen_width: int,
+        screen_height: int,
+        frame_rate: int,
+    ):
         super().__init__()
         self.game = game
         self.game_over_font = pygame.font.SysFont("times", 20)
@@ -29,11 +38,11 @@ class GraphicsGameView(GameView):
         self.segment_height = screen_height / self.game.grid_height
         logging.debug("GraphicsGameView initialized")
 
-    def update(self):
+    def update(self) -> None:
         self.draw()
         pygame.display.update()
 
-    def draw(self):
+    def draw(self) -> None:
         self.game_window.fill(Color.BLACK.value)
         for segment in self.game.snake._segments:
             pygame.draw.rect(
@@ -77,8 +86,8 @@ class GraphicsGameView(GameView):
             )
             game_over_rect = game_over_surface.get_rect()
             game_over_rect.midtop = (
-                self.game_window.get_width() / 2,
-                self.game_window.get_height() / 4,
+                self.game_window.get_width() // 2,
+                self.game_window.get_height() // 4,
             )
             self.game_window.fill(Color.BLACK.value)
             self.game_window.blit(game_over_surface, game_over_rect)
@@ -91,10 +100,8 @@ class GraphicsGameView(GameView):
         else:
             self.show_score()
 
-    def show_score(self):
-        score_font = pygame.font.SysFont(
-            "times" if self.game.game_over else "consolas", 20
-        )
+    def show_score(self) -> None:
+        score_font = pygame.font.SysFont("times" if self.game.game_over else "consolas", 20)
         score_surface = score_font.render(
             f"Score: {self.game.score}",
             True,
@@ -102,16 +109,19 @@ class GraphicsGameView(GameView):
         )
         score_rect = score_surface.get_rect()
         score_rect.midtop = (
-            (self.game_window.get_width() / 2, self.game_window.get_height() / 1.25)
+            (
+                self.game_window.get_width() // 2,
+                int(self.game_window.get_height() // 1.25),
+            )
             if self.game.game_over
-            else (self.game_window.get_width() / 10, 15)
+            else (self.game_window.get_width() // 10, 15)
         )
         self.game_window.blit(score_surface, score_rect)
 
 
 class HeadlessGameView(GameView):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         logging.debug("HeadlessGameView initialized")
 
-    def update(self):
+    def update(self) -> None:
         pass

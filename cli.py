@@ -1,4 +1,12 @@
 #!/usr/bin/env -S conda run -n ai-final python3
+"""
+EXAMPLE USAGE:
+
+./run --keyboard  # --graphics is implied
+./run --agent agents.Spinner  # --headless is implied if --graphics is not given
+./run --agent agents.GentleBrute --graphics --grid-height 10 --grid-width 10
+./run --agent agents.TailChaser --graphics --frame-rate 0
+"""
 import argparse
 import logging
 import sys
@@ -7,12 +15,10 @@ import pygame
 
 import controllers
 from game import Game
-from snake import Snake
-from utils import Coordinate, Direction
 from views import GraphicsGameView, HeadlessGameView
 
 
-def configure_logging(log_level=None):
+def configure_logging(log_level: int | None = None) -> None:
     """Sets up the logging used by all files in this project.
 
     If log_level is None (default), then the log level is set to WARNING.
@@ -23,7 +29,7 @@ def configure_logging(log_level=None):
     logging.log(log_level, f"Log level configured to {log_level=}")
 
 
-def initialize_pygame():
+def initialize_pygame() -> None:
     _, num_errors = pygame.init()
     if num_errors > 0:
         logging.error(f"ABORT! {num_errors=} during init(), exiting...")
@@ -42,31 +48,29 @@ def parse_args() -> argparse.Namespace:
     )
     argparser.add_argument(
         "--grid-width",
-        default=72,
+        default=25,
         help="The number of blocks wide the play space should be (default 72).",
         type=int,
     )
     argparser.add_argument(
         "--grid-height",
-        default=48,
+        default=25,
         help="The number of blocks tall the play space should be (default 48).",
         type=int,
     )
     argparser.add_argument(
         "--screen-width",
-        default=720,
+        default=1000,
         help="How many pixels wide the game window should be.",
         type=int,
     )
     argparser.add_argument(
         "--screen-height",
-        default=480,
+        default=1000,
         help="How many pixels tall the game window should be.",
         type=int,
     )
-    argparser.add_argument(
-        "--food", type=int, default=2, help="How many fruit to spawn at a time."
-    )
+    argparser.add_argument("--food", type=int, default=2, help="How many fruit to spawn at a time.")
 
     log_levels = [
         logging.DEBUG,
@@ -86,7 +90,7 @@ def parse_args() -> argparse.Namespace:
             help=f"Set the log level to {name}{' (default)' if level == logging.WARNING else ''}",
         )
 
-    graphics_group = argparser.add_mutually_exclusive_group(required=True)
+    graphics_group = argparser.add_mutually_exclusive_group(required=False)
     graphics_group.add_argument(
         "--graphics",
         action="store_const",
@@ -110,10 +114,13 @@ def parse_args() -> argparse.Namespace:
         "--agent",
     )
 
-    return argparser.parse_args()
+    args = argparser.parse_args()
+    if not args.Graphics:
+        args.Graphics = GraphicsGameView if args.keyboard else HeadlessGameView
+    return args
 
 
-def main():
+def main() -> None:
     """Basic housekeeping stuff
 
     * configure logging
@@ -126,15 +133,10 @@ def main():
     args = parse_args()
 
     configure_logging(log_level=args.log_level)
-    snake = Snake(
-        segments=[Coordinate(1, 1), Coordinate(1, 0), Coordinate(0, 0)],
-        direction=Direction.DOWN,
-    )
     game = Game(
         food_count=args.food,
         grid_width=args.grid_width,
         grid_height=args.grid_height,
-        snake=snake,
     )
     game_view = args.Graphics(
         game=game,
@@ -143,6 +145,7 @@ def main():
         screen_height=args.screen_height,
         frame_rate=args.frame_rate,
     )
+    controller: controllers.Controller
     if args.keyboard:
         controller = controllers.Keyboard(
             game=game, game_view=game_view, frame_rate=args.frame_rate

@@ -14,6 +14,7 @@ dependencies:
   - pip:
       - pygame
       - pytest
+      - pytest-timeout
       - pre-commit
       - mypy
       - flake8

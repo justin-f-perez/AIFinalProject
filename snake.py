@@ -5,11 +5,12 @@ Made with PyGame
 """
 
 import logging
+from dataclasses import dataclass
 
 from utils import Coordinate, Direction
 
 
-# Game variables
+@dataclass
 class Snake:
     _segments: list[Coordinate]
     _direction: Direction
@@ -18,7 +19,7 @@ class Snake:
         self._segments = segments
         self._direction = direction
 
-    def move(self, grow: bool):
+    def move(self, grow: bool) -> None:
         if not grow:
             self._segments.pop()
 
@@ -35,11 +36,11 @@ class Snake:
         logging.debug(f"Snake moved: {grow=} {self.head=}")
 
     @property
-    def direction(self):
+    def direction(self) -> Direction:
         return self._direction
 
     @direction.setter
-    def direction(self, value):
+    def direction(self, value: Direction) -> None:
         """Only sets direction if the new value is valid."""
         if value in self.valid_actions:
             self._direction = value
@@ -49,28 +50,29 @@ class Snake:
             )
 
     @property
-    def valid_actions(self):
+    def valid_actions(self) -> set[Direction]:
         """Returns the _new_ directions that the snake can _change_ to.
 
         Based on the snake's current direction."""
-        return self.direction.next()
+        directions: set[Direction] = self.direction.next()
+        return directions
 
     @property
-    def head(self):
+    def head(self) -> Coordinate:
         """Return the position of the snake's head."""
         return self._segments[0]
 
     @head.setter
-    def head(self, value):
+    def head(self, value: Coordinate) -> None:
         self._segments[0] = value
 
     @property
-    def tail(self):
+    def tail(self) -> Coordinate:
         """Return the position of the snake's tail."""
         return self._segments[-1]
 
     @tail.setter
-    def tail(self, value):
+    def tail(self, value: Coordinate) -> None:
         self._segments[-1] = value
 
     @property
