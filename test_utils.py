@@ -11,7 +11,7 @@ def test_priority_queue(game: Game) -> None:
         order.append((successor, Direction.random()))
 
     pq = PriorityQueue()
-    for i in range(25):  # 25 rounds of random shuffling
+    for _ in range(25):  # 25 rounds of random shuffling
         assert pq.empty
         state_priority_pairs = [(successor, i * 10) for i, successor in enumerate(order)]
         random.shuffle(state_priority_pairs)
