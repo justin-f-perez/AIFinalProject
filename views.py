@@ -1,8 +1,6 @@
 import abc
 import logging
 import random
-import sys
-import time
 from typing import Any
 
 import pygame
@@ -89,14 +87,10 @@ class GraphicsGameView(GameView):
                 self.game_window.get_width() // 2,
                 self.game_window.get_height() // 4,
             )
-            self.game_window.fill(Color.BLACK.value)
             self.game_window.blit(game_over_surface, game_over_rect)
             self.show_score()
             pygame.display.flip()
 
-            time.sleep(3)
-            pygame.quit()
-            sys.exit()
         else:
             self.show_score()
 

@@ -18,42 +18,66 @@ class Controller(abc.ABC):
         self.clock = pygame.time.Clock()
         self.game_view = game_view
         self.frame_rate = frame_rate
+        self.initial_game_state = copy.deepcopy(game)
 
     @abc.abstractmethod
     def get_action(self) -> Direction | None:
         ...
 
     def run(self) -> None:
-        while True:
-            self.game.update(self.get_action())
-            self.game_view.update()
-            self.clock.tick(self.frame_rate)
+        while True:  # outer "restart" loop
+            while not self.game.game_over:  # single-game loop
+                self.game.update(self.get_action())
+                self.game_view.update()
+                self.clock.tick(self.frame_rate)
+
+            # game over, wait for user input to quit or restart
+            if isinstance(self.game_view, GraphicsGameView):
+                import time
+
+                while True:
+                    restart = self.handle_restart_key(self.handle_quit_key(pygame.event.get()))
+                    if restart:
+                        break
+                    time.sleep(0.1)
+            else:
+                user_input = input("[R]estart or [Q]uit?")
+                while user_input not in "rRQq":
+                    user_input = input("[R]estart or [Q]uit?")
+                if user_input in "Qq":
+                    pygame.quit()
+                    sys.exit()
+
+            self.game = copy.deepcopy(self.initial_game_state)
+            if isinstance(self.game_view, GraphicsGameView):
+                self.game_view.game = self.game
+
+    def handle_restart_key(self, events: list[pygame.event.Event]) -> bool:
+        """While this handler is listening, press R to restart.
+
+        Only relevant when graphics are being used. The implementation is somewhat naive and will
+        eventually crash due to recursion limit (somewhere around 1,000 restarts).
+        """
+        return any(
+            [event.type == pygame.KEYDOWN and event.key in {ord("R"), ord("r")} for event in events]
+        )
 
     def handle_quit_key(self, events: list[pygame.event.Event]) -> list[pygame.event.Event]:
         """Only relevant when graphics are being used. Makes escape key cause game to quit.
 
         While escape key is not pressed, just passes through events.
         """
-        if not isinstance(self.game_view, GraphicsGameView):
-            return events
-        escape = any(
-            [event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE for event in events]
-        )
-        if escape:
-            pygame.quit()
-            sys.exit()
+        if isinstance(self.game_view, GraphicsGameView):
+            escape = any(
+                [event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE for event in events]
+            )
+            if escape:
+                pygame.quit()
+                sys.exit()
         return events
 
 
 class Keyboard(Controller):
-    def __init__(self, game: Game, *args: Any, **kwargs: Any) -> None:
-        self.initial_game_state = copy.deepcopy(game)
-        super().__init__(*args, game=game, **kwargs)  # type: ignore
-        # TODO: remove the hard-coded quit after game-over from GraphicsGameView
-        # TODO: add "R" to restart key handler
-        # TODO: override run to handle restarts by cloning (deepcopy)
-        #       the initial game state into self.game and running the loop again
-
     def get_action(self) -> Direction | None:
         direction = None
         for event in self.handle_quit_key(pygame.event.get()):
@@ -73,7 +97,7 @@ class Keyboard(Controller):
                     pygame.K_RIGHT: Direction.RIGHT,
                     ord("d"): Direction.RIGHT,
                 }
-                direction = key_map[event.key]
+                direction = key_map.get(event.key)
         return direction
 
 

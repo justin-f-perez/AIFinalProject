@@ -1,4 +1,4 @@
-#!/usr/bin/env -S conda run -n ai-final python3
+#!/usr/bin/env -S conda run --no-capture-output -n ai-final python3
 """
 EXAMPLE USAGE:
 
