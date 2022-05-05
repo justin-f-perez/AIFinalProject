@@ -4,33 +4,44 @@ import random
 from dataclasses import dataclass, field
 
 from snake import Snake
-from utils import Coordinate
+from utils import Coordinate, Direction
 
 
 @dataclass
 class Game:
     grid_width: int
     grid_height: int
-    snake: Snake
-    food_count: int
+    snake: Snake = field(
+        default_factory=lambda: Snake(
+            segments=[
+                Coordinate(0, 1),
+                Coordinate(0, 0),
+                Coordinate(1, 0),
+            ],
+            direction=Direction.DOWN,
+        )
+    )
+    food_count: int = 2
     food: set[Coordinate] = field(default_factory=set)
     score: int = 0
     game_over: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for _ in range(self.food_count):
             self.spawn_food()
 
-    @property  # type: ignore
-    def successors(self):
-        children = []
+    @property
+    def successors(self) -> "list[Game]":
+        children: "list[Game]" = []
+        if self.game_over:
+            return children
         for direction in self.snake.direction.next():
             child = copy.deepcopy(self)
             child.update(direction)
             children.append(child)
         return children
 
-    def spawn_food(self):
+    def spawn_food(self) -> None:
         """Adds a new piece of food at a random location.
         Ensures the new food piece doesn't overlap any existing piece.
         """
@@ -47,12 +58,12 @@ class Game:
         logging.debug(f"Spawned {new_food=}")
         self.food.add(new_food)
 
-    def update(self, direction=None):
+    def update(self, direction: Direction | None = None) -> None:
         logging.debug(f"{self.snake.head=} {self.snake.direction=}")
         if direction is not None:
             self.snake.direction = direction
 
-        if self.snake.head in self.food:
+        if self.snake_eating:
             # snake length increases by 1 and eaten food piece moves to random location
             logging.debug(f"Snake ate food at {self.snake.head=}")
             self.food.remove(self.snake.head)
@@ -60,7 +71,7 @@ class Game:
             self.spawn_food()
             self.score += 1
         else:
-            # handle the case where we didn't eat, and didn't grow
+            # handle the case where we didn't eat (and didn't grow)
             self.snake.move(grow=False)
         self.game_over = self.check_game_over()
 
@@ -81,10 +92,8 @@ class Game:
             )
         return is_game_over
 
-    # IMPLEMENT A ISGOALSTATE METHOD
-    # Check to see if food is in current position
-    def isGoalState(self):
+    @property
+    def snake_eating(self) -> Coordinate | None:
         if self.snake.head in self.food:
-            return True
-        else:
-            return False
+            return self.snake.head
+        return None
