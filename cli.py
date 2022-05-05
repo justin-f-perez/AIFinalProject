@@ -1,4 +1,12 @@
 #!/usr/bin/env -S conda run -n ai-final python3
+"""
+EXAMPLE USAGE:
+
+./run --keyboard  # --graphics is implied
+./run --agent agents.Spinner  # --headless is implied if --graphics is not given
+./run --agent agents.GentleBrute --graphics --grid-height 10 --grid-width 10
+./run --agent agents.TailChaser --graphics --frame-rate 0
+"""
 import argparse
 import logging
 import sys

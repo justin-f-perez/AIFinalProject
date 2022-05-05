@@ -1,3 +1,16 @@
+# Quick Reference
+_Note: assumes you've set up the conda environment_
+
+```console
+./run --keyboard  # --graphics is implied
+./run --agent agents.GentleBrute  # --headless is implied if --graphics is not given
+./run --agent agents.GentleBrute --graphics --frame-rate 0 --grid-height 10 --grid-width 10
+./run --agent agents.AStarTailChaser --graphics --frame-rate 0 --debug
+```
+
+_see: `./run --help` for more_
+
+
 # Setup
 Unless otherwise noted, all subsequent commands will assume you have activated the conda environment.
 ## Create (or update) conda environment
