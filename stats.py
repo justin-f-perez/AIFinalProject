@@ -59,6 +59,8 @@ class GameStats:
                     score_color + f"{game.score}",
                 )
             )
+
+        rows.reverse()
         return rows
 
     @classmethod
