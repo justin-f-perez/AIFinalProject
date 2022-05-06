@@ -2,7 +2,7 @@ import abc
 import copy
 import logging
 from statistics import mean
-from typing import Callable, NamedTuple
+from typing import Callable, Iterable, NamedTuple
 
 from game import Game
 from snake import Snake
@@ -11,7 +11,7 @@ from utils import Direction, PriorityQueue, manhattan_distance, reciprocal
 
 class BaseAgent(abc.ABC):
     @abc.abstractmethod
-    def get_action(self, state: Game) -> list[Direction] | Direction:
+    def get_action(self, state: Game) -> Iterable[Direction] | Direction | None:
         ...
 
 
@@ -95,30 +95,28 @@ class Random(BaseAgent):
 
 
 class TailChaser(BaseAgent):
-    def get_action(self, game: Game) -> list[Direction]:
-        return list(
-            a_star(
-                state=game,
-                goal=lambda state: feeder_goal(state) and tail_chaser_goal(state),
-            )
+    def get_action(self, game: Game) -> Iterable[Direction] | None:
+        return a_star(
+            state=game,
+            goal=lambda state: feeder_goal(state) and tail_chaser_goal(state),
         )
 
 
 class Hungry(BaseAgent):
-    def get_action(self, game: Game) -> list[Direction]:
-        return list(a_star(state=game, goal=feeder_goal))
+    def get_action(self, game: Game) -> Iterable[Direction] | None:
+        return a_star(state=game, goal=feeder_goal)
 
 
 class AStarSearch(BaseAgent):
-    def get_action(self, game: Game) -> list[Direction]:
-        return list(self.aStarSearch(snake=game.snake, game=game))
+    def get_action(self, game: Game) -> Iterable[Direction]:
+        return self.aStarSearch(snake=game.snake, game=game)
 
     def aStarSearch(
         self,
         snake: Snake,
         game: Game,
         heuristic: Callable[[Game], float] = average_food_heuristic,
-    ) -> list[Direction]:
+    ) -> Iterable[Direction]:
         frontier = PriorityQueue()
         closed_set = []
         frontier.push(([], snake.head, 0), 0)
@@ -161,12 +159,12 @@ def a_star(
     state: Game,
     heuristic: Callable[[Game], float] = min_man_heuristic,
     goal: Callable[[Game], bool] = lambda state: feeder_goal(state) and tail_chaser_goal(state),
-) -> tuple[Direction, ...]:
+) -> tuple[Direction, ...] | None:
     heuristic_warning = False
     closed = []
     frontier = PriorityQueue()
     frontier.push(item=PathNode(actions=(), state=state, cost=0), priority=0)
-    while True:
+    while frontier.has_items:
         current_node: PathNode = frontier.pop()
         logging.debug(
             f"A* EVALUATING:\n"
@@ -204,6 +202,8 @@ def a_star(
                     f"\tcost={successor_node.cost} actions={successor_node.actions}"
                 )
                 frontier.push(item=successor_node, priority=successor_node.cost + heuristic_value)
+
+    return None  # no path to goal state
 
 
 class PathNode(NamedTuple):

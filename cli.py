@@ -14,6 +14,7 @@ import sys
 import pygame
 
 import controllers
+from agents import BaseAgent
 from game import Game
 from views import GraphicsGameView, HeadlessGameView
 
@@ -110,9 +111,8 @@ def parse_args() -> argparse.Namespace:
         "--keyboard",
         action="store_true",
     )
-    controller_group.add_argument(
-        "--agent",
-    )
+    agent_choices = sorted(f"{s.__module__}.{s.__name__}" for s in BaseAgent.__subclasses__())
+    controller_group.add_argument("--agent", choices=agent_choices)
 
     args = argparser.parse_args()
     if not args.Graphics:
