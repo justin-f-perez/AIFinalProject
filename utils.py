@@ -1,7 +1,10 @@
 import enum
 import heapq
 import random
+import time
 from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable, Iterable, NamedTuple
 
 import pygame
@@ -165,3 +168,28 @@ def arg_max(
             best_value = item_value
             best_items = [item]
     return break_ties(best_items) if len(best_items) else None
+
+
+def timestamp() -> str:
+    "Returns a timestamp in YYYYMMDD_HHMMSS (i.e., <DATE>_<TIME>) format"
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+def get_timestamped_file_path(dir: Path, suffix: str) -> Path:
+    """Given a directory and suffix, returns a Path to a file whose name represents current time.
+
+    If file already exists, this funcdtion will sleep for 1 second and retry 3 times before raising
+    an exception.
+    """
+    file_path = (dir / timestamp()).with_suffix(suffix)
+
+    retries = 3
+    while file_path.exists():
+        retries -= 1
+        if retries < 0:
+            raise Exception(f"File already exists (3rd retry) {file_path}")
+        # just in case someone starts 2 games at same time
+        time.sleep(1)
+        file_path = (dir / timestamp()).with_suffix(".csv")
+
+    return file_path

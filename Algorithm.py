@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 from utils import Node
 
+
 class Algorithm(ABC):
     def __init__(self, grid):
         self.grid = grid
@@ -28,10 +29,10 @@ class Algorithm(ABC):
         pass
 
     def get_path(self, node):
-        if node.parent == None:
+        if node.parent is None:
             return node
 
-        while node.parent.parent != None:
+        while node.parent.parent is not None:
             self.path.append(node)
             node = node.parent
         return node

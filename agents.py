@@ -315,3 +315,6 @@ class QQ(BaseAgent):
         """Learn a new transition."""
         weighted_difference = self.alpha * self.difference(state, action, next_state, reward)
         self.Q[(state, action)] = self.get_Q_value(state, action) + weighted_difference
+        if random.random() < 0.01:
+            # we just occassionally log Q values 1% of the time so the log file doesn't get too big
+            logging.debug(f"Q update: {self.Q.values()}")

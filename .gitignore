@@ -163,3 +163,4 @@ cython_debug/
 
 .virtual_documents/
 game-stats/
+debug-logs/

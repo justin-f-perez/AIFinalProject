@@ -10,24 +10,29 @@ EXAMPLE USAGE:
 import argparse
 import logging
 import sys
+from pathlib import Path
 
 import pygame
 
 import controllers
 from agents import BaseAgent
 from game import Game
+from utils import get_timestamped_file_path
 from views import GraphicsGameView, HeadlessGameView
+
+DEBUG_LOG_DIR = Path(__file__).parent / "debug-logs"
 
 
 def configure_logging(log_level: int | None = None) -> None:
     """Sets up the logging used by all files in this project.
 
-    If log_level is None (default), then the log level is set to WARNING.
+    If log_level is None, no logging is configured (at least by us).
     """
-    if not log_level:
-        log_level = logging.WARNING
-    logging.basicConfig(level=log_level, force=True)
-    logging.log(log_level, f"Log level configured to {log_level=}")
+    if log_level:
+        DEBUG_LOG_DIR.mkdir(exist_ok=True)
+        debug_log_file_path = get_timestamped_file_path(dir=DEBUG_LOG_DIR, suffix=".log")
+        logging.basicConfig(level=log_level, force=True, filename=debug_log_file_path)
+        logging.log(log_level, f"Log level configured to {log_level=}")
 
 
 def initialize_pygame() -> None:
@@ -46,6 +51,19 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Automatically restart after losing game.",
     )
+    argparser.add_argument(
+        "--harvest",
+        default=None,
+        help="""
+        Harvest big snakes- i.e., end the game once it reaches the given score.
+
+        Useful in combination with --auto-restart to perform timed tests. Note that
+        score is equal to the number of food eaten. This will not be equal to snake length
+        because initial snake length is always greater than zero.
+        """,
+        type=int,
+    )
+
     argparser.add_argument(
         "--frame-rate",
         default=25,
@@ -93,8 +111,20 @@ def parse_args() -> argparse.Namespace:
             action="store_const",
             dest="log_level",
             const=level,
-            help=f"Set the log level to {name}{' (default)' if level == logging.WARNING else ''}",
+            default=logging.WARNING,
+            help=(
+                f"Set the log level to {name}{' (default)' if level == logging.WARNING else ''}. "
+                f"(Logs are written to {DEBUG_LOG_DIR})"
+            ),
         )
+    log_level_group.add_argument(
+        "--no-log",
+        action="store_const",
+        dest="log_level",
+        const=None,
+        default=logging.WARNING,
+        help="Disable logging (no log file will be written)",
+    )
 
     graphics_group = argparser.add_mutually_exclusive_group(required=False)
     graphics_group.add_argument(
@@ -151,23 +181,18 @@ def main() -> None:
         frame_rate=args.frame_rate,
     )
     controller: controllers.Controller
+    common_controller_kwargs = {
+        "game": game,
+        "game_view": game_view,
+        "frame_rate": args.frame_rate,
+        "auto_restart": args.auto_restart,
+        "harvest": args.harvest,
+    }
     if args.keyboard:
-        controller = controllers.Keyboard(
-            game=game,
-            game_view=game_view,
-            frame_rate=args.frame_rate,
-            auto_restart=args.auto_restart,
-        )
+        controller = controllers.Keyboard(**common_controller_kwargs)
     else:
         assert args.agent
-
-        controller = controllers.Agent(
-            agent_class=args.agent,
-            game=game,
-            game_view=game_view,
-            frame_rate=args.frame_rate,
-            auto_restart=args.auto_restart,
-        )
+        controller = controllers.Agent(agent_class=args.agent, **common_controller_kwargs)
     controller.run()
 
 

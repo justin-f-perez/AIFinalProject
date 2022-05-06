@@ -6,15 +6,14 @@ from pathlib import Path
 from rich.table import Table
 
 from game import Game
+from utils import get_timestamped_file_path
 
 DEFAULT_FILE_DIR = Path(__file__).parent / "game-stats"
 DEFAULT_FILE_DIR.mkdir(exist_ok=True)
 # time stamp for file name is handy for ordering most recent
 # it also gives us an easy way to generate meaningful file names with
 # low chance of collision
-DEFAULT_FILE_PATH = (DEFAULT_FILE_DIR / datetime.now().strftime("%Y%m%d_%H%M%S")).with_suffix(
-    ".csv"
-)
+DEFAULT_FILE_PATH = get_timestamped_file_path(dir=DEFAULT_FILE_DIR, suffix=".csv")
 
 while DEFAULT_FILE_PATH.exists():
     # just in case someone starts 2 games at same time

@@ -17,7 +17,12 @@ from views import GameView, GraphicsGameView, HeadlessGameView
 
 class Controller(abc.ABC):
     def __init__(
-        self, game: Game, game_view: GameView, frame_rate: int = 0, auto_restart: bool = False
+        self,
+        game: Game,
+        game_view: GameView,
+        frame_rate: int = 0,
+        auto_restart: bool = False,
+        harvest: int | None = None,
     ) -> None:
         self.game = game
         self.clock = pygame.time.Clock()
@@ -25,6 +30,7 @@ class Controller(abc.ABC):
         self.frame_rate = frame_rate
         self.initial_game_state = copy.deepcopy(game)
         self.auto_restart = auto_restart
+        self.harvest = harvest
 
     @abc.abstractmethod
     def get_action(self) -> Direction | None:
@@ -35,6 +41,8 @@ class Controller(abc.ABC):
         with Live(GameStats.rich_table(), auto_refresh=False, screen=True) as live:
             while not self.game.game_over:  # single-game loop
                 self.game.update(self.get_action())
+                if self.game.score == self.harvest:
+                    self.game.game_over = True
                 self.game_view.update()
                 live.update(GameStats.rich_table())
                 live.refresh()
