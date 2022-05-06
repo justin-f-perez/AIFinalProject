@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 from utils import Node
 
-"""class Algorithm(ABC):
+class Algorithm(ABC):
     def __init__(self, grid):
         self.grid = grid
         self.frontier = []
@@ -61,4 +61,4 @@ from utils import Node
         if j < 20 - 1:
             neighbors.append(self.grid[i][j + 1])
 
-        return neighbors """
+        return neighbors
