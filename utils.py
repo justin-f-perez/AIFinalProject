@@ -120,3 +120,31 @@ class Coordinate(NamedTuple):
 def manhattan_distance(xy1: tuple[int, int], xy2: tuple[int, int]) -> int:
     "Returns the Manhattan distance between points xy1 and xy2"
     return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+
+
+
+class Node:
+    def __init__(self, x, y):
+        self.x = int(x)
+        self.y = int(y)
+        self.h = 0
+        self.g = 0
+        self.f = 1000000
+        self.parent = None
+
+    def print(self):
+        print(f"x: {self.x} y: {self.y}")
+
+    def equal(self, b):
+        return self.x == b.x and self.y == b.y
+
+
+class Grid:
+    def __init__(self):
+        self.grid = []
+
+        for i in range(20):
+            col = []
+            for j in range(20):
+                col.append(Node(i, j))
+            self.grid.append(col)
