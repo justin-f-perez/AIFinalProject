@@ -162,3 +162,4 @@ cython_debug/
 #.idea/
 
 .virtual_documents/
+game-stats/

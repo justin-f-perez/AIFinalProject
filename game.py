@@ -24,6 +24,9 @@ class Game:
     food_count: int = 2
     food: set[Coordinate] = field(default_factory=set)
     score: int = 0
+    # compare=false because tick is for statistics, not a part
+    # of our representation of game state
+    ticks: int = field(default=0, compare=False)
     game_over: bool = False
 
     def __post_init__(self) -> None:
@@ -59,6 +62,10 @@ class Game:
         self.food.add(new_food)
 
     def update(self, direction: Direction | None = None) -> None:
+        if self.game_over:
+            logging.warning(f"Not updating because {self.game_over=}.")
+            return
+        self.ticks += 1
         logging.debug(f"{self.snake.head=} {self.snake.direction=}")
         if direction is not None:
             self.snake.direction = direction

@@ -2,12 +2,15 @@ import abc
 import copy
 import importlib
 import sys
+import time
 from typing import Any, Iterable, Mapping, TypeVar
 
 import pygame
+from rich.live import Live
 
 from agents import BaseAgent
 from game import Game
+from stats import GameStats
 from utils import Direction
 from views import GameView, GraphicsGameView, HeadlessGameView
 
@@ -24,17 +27,21 @@ class Controller(abc.ABC):
     def get_action(self) -> Direction | None:
         ...
 
-    def run(self) -> None:
-        while True:  # outer "restart" loop
+    def game_loop(self) -> None:
+        GameStats.track(self.game)
+        with Live(GameStats.rich_table(), auto_refresh=False, screen=True) as live:
             while not self.game.game_over:  # single-game loop
                 self.game.update(self.get_action())
                 self.game_view.update()
+                live.update(GameStats.rich_table())
+                live.refresh()
                 self.clock.tick(self.frame_rate)
 
+    def run(self) -> None:
+        while True:  # outer "restart" loop
+            self.game_loop()
             # game over, wait for user input to quit or restart
             if isinstance(self.game_view, GraphicsGameView):
-                import time
-
                 while True:
                     restart = self.handle_restart_key(self.handle_quit_key(pygame.event.get()))
                     if restart:
@@ -144,14 +151,16 @@ class Agent(Controller):
         """Effectively acts as an adapter between Game, View, and Agent"""
         self.handle_quit_key(pygame.event.get())
         if not self.actions:
-            new_actions: Direction | list[Direction] = self.agent_instance.get_action(self.game)
-            if isinstance(new_actions, list):
-                if len(new_actions) == 0:
-                    return None
-            else:
+            new_actions: Iterable[Direction] | Direction | None = self.agent_instance.get_action(
+                self.game
+            )
+            if isinstance(new_actions, Direction):
                 # This agent decided to return 1 action instead of a whole list.
                 # Wrap in a list so we can just treat both cases as the same.
                 new_actions = [new_actions]
-            self.actions = new_actions
+            elif not new_actions:
+                return None
+            # convert any other iterable type to list so we can pop()
+            self.actions = list(new_actions)
 
         return self.actions.pop(0)

@@ -1,14 +1,29 @@
 # Quick Reference
-_Note: assumes you've set up the conda environment_
 
-```console
-./run --keyboard  # --graphics is implied
-./run --agent agents.GentleBrute  # --headless is implied if --graphics is not given
-./run --agent agents.GentleBrute --graphics --frame-rate 0 --grid-height 10 --grid-width 10
-./run --agent agents.AStarTailChaser --graphics --frame-rate 0 --debug
+```bash
+# see all CLI options, including available agents
+./run --help
+
+# --graphics is implied for --keyboard
+./run --keyboard
+
+# --headless, i.e., no graphics, is implied for --agent if --graphics is not given
+./run --agent agents.GentleBrute
+
+# set 0 frame-rate to disable frame throttling (update as fast as CPU allows)
+./run --agent agents.GentleBrute --graphics --frame-rate 0
+
+# can control screen (window) size (in pixels)
+./run --agent agents.Random --graphics --screen-height 600 --screen-width 800
+
+# can also control game grid dimensions
+./run --agent agents.Hungry --graphics --grid-height 10 --grid-width 10
+
+# various flags for different log levels are available
+./run --agent agents.TailChaser --graphics --frame-rate 0 --debug
 ```
 
-_see: `./run --help` for more_
+_Note: the shebang in the CLI executable assumes you've set up the conda environment with the name given in environment.yml. If you specify a custom environment name, you must specify the interpreter yourself. `./run` is just a symlink to cli.py. all of the above examples can be run replacing `./run` with `python3 cli.py`, e.g., `conda activate my-env && python3 cli.py --help`._
 
 
 # Setup
