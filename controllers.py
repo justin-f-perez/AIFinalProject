@@ -16,12 +16,15 @@ from views import GameView, GraphicsGameView, HeadlessGameView
 
 
 class Controller(abc.ABC):
-    def __init__(self, game: Game, game_view: GameView, frame_rate: int = 0) -> None:
+    def __init__(
+        self, game: Game, game_view: GameView, frame_rate: int = 0, auto_restart: bool = False
+    ) -> None:
         self.game = game
         self.clock = pygame.time.Clock()
         self.game_view = game_view
         self.frame_rate = frame_rate
         self.initial_game_state = copy.deepcopy(game)
+        self.auto_restart = auto_restart
 
     @abc.abstractmethod
     def get_action(self) -> Direction | None:
@@ -39,8 +42,13 @@ class Controller(abc.ABC):
 
     def run(self) -> None:
         while True:  # outer "restart" loop
+            self.game = copy.deepcopy(self.initial_game_state)
+            if isinstance(self.game_view, GraphicsGameView):
+                self.game_view.game = self.game
             self.game_loop()
-            # game over, wait for user input to quit or restart
+            if self.auto_restart:
+                continue
+            # game over and no auto_restart, wait for user input to quit or restart
             if isinstance(self.game_view, GraphicsGameView):
                 while True:
                     restart = self.handle_restart_key(self.handle_quit_key(pygame.event.get()))
@@ -54,10 +62,6 @@ class Controller(abc.ABC):
                 if user_input in "Qq":
                     pygame.quit()
                     sys.exit()
-
-            self.game = copy.deepcopy(self.initial_game_state)
-            if isinstance(self.game_view, GraphicsGameView):
-                self.game_view.game = self.game
 
     def handle_restart_key(self, events: list[pygame.event.Event]) -> bool:
         """While this handler is listening, press R to restart.

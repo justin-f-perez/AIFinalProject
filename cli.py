@@ -42,6 +42,11 @@ def initialize_pygame() -> None:
 def parse_args() -> argparse.Namespace:
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
+        "--auto-restart",
+        action="store_true",
+        help="Automatically restart after losing game.",
+    )
+    argparser.add_argument(
         "--frame-rate",
         default=25,
         help="For manual mode. Determines frame rate (and difficulty).",
@@ -148,7 +153,10 @@ def main() -> None:
     controller: controllers.Controller
     if args.keyboard:
         controller = controllers.Keyboard(
-            game=game, game_view=game_view, frame_rate=args.frame_rate
+            game=game,
+            game_view=game_view,
+            frame_rate=args.frame_rate,
+            auto_restart=args.auto_restart,
         )
     else:
         assert args.agent
@@ -158,6 +166,7 @@ def main() -> None:
             game=game,
             game_view=game_view,
             frame_rate=args.frame_rate,
+            auto_restart=args.auto_restart,
         )
     controller.run()
 

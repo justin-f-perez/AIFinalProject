@@ -1,14 +1,14 @@
 import abc
 import copy
 import logging
-import math
+import random
 from statistics import mean
 from typing import Callable, Iterable, NamedTuple
 
 from Algorithm import Algorithm
 from game import Game
 from snake import Snake
-from utils import Direction, Grid, Node, PriorityQueue, manhattan_distance, reciprocal
+from utils import Direction, PriorityQueue, arg_max, manhattan_distance, reciprocal
 
 
 class BaseAgent(abc.ABC):
@@ -241,7 +241,7 @@ class DFS(Algorithm):
             if not self.inside_body(snake, neighbor) and neighbor not in self.explored_set:
                 neighbor.parent = currentstate  # mark parent node
                 path = self.recursive_DFS(snake, goalstate, neighbor)  # check neighbor
-                if path != None:
+                if path is not None:
                     return path  # found path
         return None
 
@@ -267,3 +267,51 @@ class DFS(Algorithm):
 
         # return path
         return self.recursive_DFS(snake, goalstate, initialstate)
+
+
+QValues = dict[tuple[Game, Direction], float]  # type variable
+
+
+class QQ(BaseAgent):
+    Q: QValues
+    epsilon: float
+    discount: float
+    alpha: float
+
+    def __init__(self, epsilon=0.05, discount=0.9, alpha=0.1):
+        self.Q = {}
+        self.epsilon = epsilon
+        self.discount = discount
+        self.alpha = alpha
+
+    def get_action(self, state: Game) -> Iterable[Direction] | Direction | None:
+        if random.random() <= self.epsilon:
+            action = random.choice(list(state.snake.direction.next()))
+        else:
+            action = self.get_learned_action(state)
+        next_state, reward = state.make_observation(action)
+        self.update(state, action, next_state, reward)
+        return action
+
+    def get_Q_value(self, state: Game, action: Direction) -> float:
+        """Return Q(s,a), or 0.0 if a state has never been seen."""
+        return self.Q.get((state, action), 0.0)
+
+    def get_value(self, state: Game) -> float:
+        """Return max(Q(s,a) for a in legal actions), or 0.0 when no actions."""
+        q_values = [self.get_Q_value(state, a) for a in state.snake.direction.next()]
+        return max(q_values) if q_values else 0.0
+
+    def get_learned_action(self, state: Game) -> Direction:
+        actions = state.snake.direction.next()
+        return arg_max(actions, lambda action: self.get_Q_value(state, action))
+
+    def difference(self, state: Game, action: Direction, next_state: Game, reward: float) -> float:
+        r"""Return the discounted V(s2) + reward - Q(s,a)"""
+        Qsa, V = self.get_Q_value(state, action), self.get_value(next_state)
+        return reward + self.discount * V - Qsa
+
+    def update(self, state: Game, action: Direction, next_state: Game, reward: float) -> None:
+        """Learn a new transition."""
+        weighted_difference = self.alpha * self.difference(state, action, next_state, reward)
+        self.Q[(state, action)] = self.get_Q_value(state, action) + weighted_difference

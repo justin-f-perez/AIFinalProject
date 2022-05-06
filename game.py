@@ -33,6 +33,19 @@ class Game:
         for _ in range(self.food_count):
             self.spawn_food()
 
+    def __hash__(self):
+        return hash(
+            (
+                self.grid_width,
+                self.grid_height,
+                tuple(self.snake._segments),
+                self.snake.direction,
+                frozenset(self.food),
+                self.score,
+                self.game_over,
+            )
+        )
+
     @property
     def successors(self) -> "list[Game]":
         children: "list[Game]" = []
@@ -104,3 +117,23 @@ class Game:
         if self.snake.head in self.food:
             return self.snake.head
         return None
+
+    def make_observation(self, action: Direction) -> tuple["Game", float]:
+        """Return a simulated action.
+
+        In particular, given a Direction, return the next
+        Game state that it would lead to and the score delta*.
+
+        Raises an exception if this state is game_over or action is invalid.
+        *Returns -inf in the case that the next state is game_over, the current
+        state is game_over, or the action is invalid.
+        """
+        if self.game_over:
+            raise Exception(f"Cannot make observations on a game_over state {self=}")
+        if action not in self.snake.direction.next():
+            raise Exception(f"Action {action=} is invalid from state {self=}")
+        (next_state,) = (s for s in self.successors if s.snake.direction == action)
+        score_delta = (
+            float("-inf") if next_state.game_over else float(next_state.score - self.score)
+        )
+        return (next_state, score_delta)

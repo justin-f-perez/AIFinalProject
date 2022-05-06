@@ -2,7 +2,7 @@ import enum
 import heapq
 import random
 from dataclasses import dataclass, field
-from typing import Any, NamedTuple
+from typing import Any, Callable, Iterable, NamedTuple
 
 import pygame
 
@@ -122,7 +122,6 @@ def manhattan_distance(xy1: tuple[int, int], xy2: tuple[int, int]) -> int:
     return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
 
 
-
 class Node:
     def __init__(self, x, y):
         self.x = int(x)
@@ -148,3 +147,21 @@ class Grid:
             for j in range(20):
                 col.append(Node(i, j))
             self.grid.append(col)
+
+
+def arg_max(
+    iterable: Iterable[Any],
+    func: Callable[[Any], Any],
+    break_ties: Callable[[Any], Any] = random.choice,
+) -> Any:
+    """Return the item in `iterable` that maximizes `func`."""
+    best_items = []
+    best_value = float("-inf")
+    for item in iterable:
+        item_value = func(item)
+        if item_value == best_value:
+            best_items.append(item)
+        elif item_value > best_value:
+            best_value = item_value
+            best_items = [item]
+    return break_ties(best_items) if len(best_items) else None
