@@ -7,47 +7,26 @@ Made with PyGame
 import logging
 from dataclasses import dataclass
 
+from serializers import SerializerMixin
 from utils import Coordinate, Direction
 
 
-@dataclass
-class Snake:
-    _segments: list[Coordinate]
-    _direction: Direction
+@dataclass(frozen=True, eq=True, order=True, kw_only=True, slots=True)
+class Snake(SerializerMixin):
+    segments: tuple[Coordinate, ...] = (
+        Coordinate(0, 1),
+        Coordinate(0, 0),
+        Coordinate(1, 0),
+    )
 
-    def __init__(self, segments: list[Coordinate], direction: Direction):
-        self._segments = segments
-        self._direction = direction
-
-    def move(self, grow: bool) -> None:
-        if not grow:
-            self._segments.pop()
-
-        new_x, new_y = self.head
-        if self.direction == Direction.UP:
-            new_y -= 1
-        elif self.direction == Direction.DOWN:
-            new_y += 1
-        elif self.direction == Direction.LEFT:
-            new_x -= 1
-        elif self.direction == Direction.RIGHT:
-            new_x += 1
-        self._segments.insert(0, Coordinate(X=new_x, Y=new_y))
-        logging.debug(f"Snake moved: {grow=} {self.head=}")
-
-    @property
-    def direction(self) -> Direction:
-        return self._direction
-
-    @direction.setter
-    def direction(self, value: Direction) -> None:
-        """Only sets direction if the new value is valid."""
-        if value in self.valid_actions:
-            self._direction = value
-        else:
-            logging.debug(
-                f"Ignoring invalid action {value=}\n{self.direction=}\n{self.valid_actions=}"
-            )
+    def validate_segments(self) -> bool:
+        if len(self.segments) < 2:
+            # 2 because we depend on the 2nd segment to find direction
+            return False
+        for previous, next in zip(self.segments[:-1], self.segments[1:]):
+            if abs(previous.X - next.X) + abs(previous.Y - next.Y) != 1:
+                return False
+        return True
 
     @property
     def valid_actions(self) -> set[Direction]:
@@ -58,24 +37,59 @@ class Snake:
         return directions
 
     @property
+    def ouroboros(self) -> bool:
+        """True iff the snake is eating itself."""
+        return self.head in self.segments[1:]
+
+    @property
+    def direction(self) -> Direction:
+        if len(self.segments) == 1:
+            return Direction.random()
+        # fmt: off
+        match (self.head.X - self.neck.X, self.head.Y - self.neck.Y):
+            case (-1, 0): return Direction.LEFT
+            case (1, 0): return Direction.RIGHT
+            case (0, 1): return Direction.DOWN
+            case (0, -1): return Direction.UP
+            case _: raise Exception()
+        # fmt: on
+
+    @property
     def head(self) -> Coordinate:
         """Return the position of the snake's head."""
-        return self._segments[0]
-
-    @head.setter
-    def head(self, value: Coordinate) -> None:
-        self._segments[0] = value
+        return self.segments[0]
 
     @property
     def tail(self) -> Coordinate:
         """Return the position of the snake's tail."""
-        return self._segments[-1]
-
-    @tail.setter
-    def tail(self, value: Coordinate) -> None:
-        self._segments[-1] = value
+        return self.segments[-1]
 
     @property
-    def ouroboros(self) -> bool:
-        """True iff the snake is eating itself."""
-        return self.head in set(self._segments[1:])
+    def neck(self) -> Coordinate:
+        """Return the element at index 1"""
+        # we use this for finding direction
+        try:
+            return self.segments[1]
+        except IndexError:
+            raise Exception(
+                f"Attempted to access snake.neck, but the snake is too short! {self.segments=}"
+            )
+
+    def move(self, direction: Direction | None, grow: bool) -> "Snake":
+        if direction not in self.valid_actions:
+            raise Exception(f"Invalid movement direction {direction=}")
+        new_x, new_y = self.head
+        match direction:
+            case Direction.UP:
+                new_y -= 1
+            case Direction.DOWN:
+                new_y += 1
+            case Direction.LEFT:
+                new_x -= 1
+            case Direction.RIGHT:
+                new_x += 1
+
+        logging.debug(f"Snake moved: {grow=} {self.head=}")
+        new_head = Coordinate(X=new_x, Y=new_y)
+        new_body = self.segments[:] if grow else self.segments[:-1]
+        return Snake(segments=(new_head,) + new_body)

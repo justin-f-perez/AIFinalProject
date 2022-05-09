@@ -11,7 +11,7 @@ from utils import Color
 
 class GameView(abc.ABC):
     @abc.abstractmethod
-    def update(self) -> None:
+    def update(self, game: Game) -> None:
         ...
 
 
@@ -36,13 +36,14 @@ class GraphicsGameView(GameView):
         self.segment_height = screen_height / self.game.grid_height
         logging.debug("GraphicsGameView initialized")
 
-    def update(self) -> None:
+    def update(self, game: Game) -> None:
+        self.game = game
         self.draw()
         pygame.display.update()
 
     def draw(self) -> None:
         self.game_window.fill(Color.BLACK.value)
-        for segment in self.game.snake._segments:
+        for segment in self.game.snake.segments:
             pygame.draw.rect(
                 self.game_window,
                 Color.GREEN.value,
@@ -78,6 +79,10 @@ class GraphicsGameView(GameView):
                 "Tilt!",
                 "MUERTO",
                 "404 Not Found",
+                "Try again",
+                "Better luck next time",
+                r"*** STOP: 0x105312",
+                "PLAYER_FAULT",
             )
             game_over_surface = you_died_font.render(
                 random.choice(you_died_phrases), True, Color.RED.value
@@ -117,5 +122,5 @@ class HeadlessGameView(GameView):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         logging.debug("HeadlessGameView initialized")
 
-    def update(self) -> None:
+    def update(self, *args: Any, **kwargs: Any) -> None:
         pass

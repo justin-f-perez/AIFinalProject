@@ -18,7 +18,11 @@ dependencies:
       - pytest-timeout
       - pre-commit
       - mypy
+      - types-PyYAML
       - flake8
+      - flake8-bugbear
+      - flake8-comprehensions
+      - flake8-pyi
       - black
       - nb_black  # run black auto-formatter in jupyter notebook
       - jupyterlab  # run python/markdown notebooks

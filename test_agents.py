@@ -71,45 +71,65 @@ def test_average_food_heuristic(
         coord[0] + coord[1]
     * we test both orders for the args to manhattan_distance()
     """
-    snake = Snake([head], Direction.UP)  # direction is arbitrary
-    game.snake = snake
-    game.food = food
+    snake = Snake(segments=(head,))
+    game = Game(snake=snake, food=frozenset(food))
     assert reciprocal_average_food_heuristic(game) == expected
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.parametrize(
+a_star_test_cases = (
     "food_coords, expected_actions",
     [
-        ({Coordinate(0, 0)}, ()),  # start state=goal state
-        ({Coordinate(1, 0)}, (Direction.RIGHT,)),  # test directional movement
-        ({Coordinate(0, 1)}, (Direction.DOWN,)),
-        (  # test more than 1 move
-            {Coordinate(2, 0)},
-            (Direction.RIGHT, Direction.RIGHT),
-        ),
-        ({Coordinate(0, 2)}, (Direction.DOWN, Direction.DOWN)),
-        ({Coordinate(50, 0)}, (Direction.RIGHT,) * 50),  # test a long one
-        (  # test more than 1 food
-            {Coordinate(2, 0), Coordinate(1, 0)},
-            (Direction.RIGHT,),
-        ),
-        (  # test find nearest food
-            {Coordinate(25, 0), Coordinate(0, 50)},
-            (Direction.RIGHT,) * 25,
-        ),
-        (  # even more food
-            [(25, 0)] + [(0, y) for y in range(30, 50)],
-            (Direction.RIGHT,) * 25,
-        ),
+        # test start state=goal state
+        ({(0, 0)}, ()),  # 0
+        # test directional movement
+        ({(1, 0)}, (Direction.RIGHT,)),  # 1
+        ({(0, 1)}, (Direction.DOWN,)),  # 2
+        # test more than 1 move
+        ({(2, 0)}, (Direction.RIGHT, Direction.RIGHT)),  # 3
+        ({(0, 2)}, (Direction.DOWN, Direction.DOWN)),  # 4
+        ({(0, 3)}, (Direction.DOWN,) * 5),  # 5
+        ({(0, 4)}, (Direction.DOWN,) * 5),  # 5
+        ({(0, 5)}, (Direction.DOWN,) * 5),  # 5
+        ({(0, 10)}, (Direction.DOWN,) * 10),  # 6
+        ({(0, 25)}, (Direction.DOWN,) * 10),  # 7
+        # test a long one
+        ({(50, 0)}, (Direction.RIGHT,) * 50),  # 8
+        # test more than 1 food
+        ({(2, 0), (1, 0)}, (Direction.RIGHT,)),  # 9
+        # test find nearest food
+        ({(25, 0), (0, 50)}, (Direction.RIGHT,) * 25),  # 10
+        # final level: lots of 'dummy' food, nearest food is far away
+        ([(25, 0)] + [(0, y) for y in range(30, 50)], (Direction.RIGHT,) * 25),  # 11
     ],
 )
-def test_a_star(
+
+
+@pytest.mark.timeout(10)
+@pytest.mark.parametrize(*a_star_test_cases)
+def test_a_star_tail_chaser(
     food_coords: set[Coordinate], expected_actions: tuple[Direction], game: Game
 ) -> None:
-    snake = Snake([Coordinate(0, 0), Coordinate(-1, 0)], Direction.DOWN)
-    game.snake = snake
-    game.food = {Coordinate(*food_coord) for food_coord in food_coords}
+    snake = Snake(segments=(Coordinate(0, 0), Coordinate(-1, 0)))
+    food = frozenset({Coordinate(*food_coord) for food_coord in food_coords})
+    game = Game(snake=snake, food=food)
+    assert (
+        a_star(
+            game,
+            heuristic=min_man_heuristic,
+            goal=lambda state: feeder_goal(state) and tail_chaser_goal(state),
+        )
+        == expected_actions
+    )
+
+
+@pytest.mark.timeout(10)
+@pytest.mark.parametrize(*a_star_test_cases)
+def test_a_star_food_only_goal(
+    food_coords: set[Coordinate], expected_actions: tuple[Direction], game: Game
+) -> None:
+    snake = Snake(segments=(Coordinate(0, 0), Coordinate(-1, 0)))
+    food = frozenset({Coordinate(*food_coord) for food_coord in food_coords})
+    game = Game(snake=snake, food=food)
     assert (
         a_star(
             game,

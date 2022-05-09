@@ -2,12 +2,36 @@ import enum
 import heapq
 import random
 import time
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Iterable, NamedTuple
 
 import pygame
+import yaml
+
+from serializers import SerializerMixin
+
+# welp, turns out dataclasses already implements something with the exact same idea, but
+# smarter about dataclass internals (e.g., fields with init=false)
+
+# from game import Game
+# from snake import Snake
+# T = TypeVar("T", Game, Snake)
+# def replace(obj: T, **kwargs: Any) -> T:
+#     """Return a copy of ``obj`` with the requested fields changed
+#
+#     Only tested with dataclasses that have slots=True
+#     Pass requested changes as keyword arguments
+#     """
+#     fields = obj.__slots__
+#     if unsupported := set(kwargs.keys()) - set(fields):
+#         raise Exception(f"Got unexpected arguments {','.join(unsupported)} for {type(obj)=}")
+#     old_args = {k: getattr(obj, k) for k in fields}
+#     updated_args = old_args | kwargs
+#     new_obj = type(obj)(updated_args)
+#     return new_obj
 
 
 def reciprocal(num: float) -> float:
@@ -45,8 +69,8 @@ class Direction(enum.Enum):
         return valid[self]
 
 
-@dataclass(order=True)
-class PrioritizedItem:
+@dataclass(frozen=True, eq=True, order=True, kw_only=True, slots=True)
+class PrioritizedItem(SerializerMixin):
     """Helper class for PriorityQueue."""
 
     priority: float
@@ -119,37 +143,54 @@ class Coordinate(NamedTuple):
     X: int
     Y: int
 
+    def to_yaml(self):
+        # can't use SerializerMixin; "NamedTuple should be a single base." -mypy
+        return yaml.dump({"X": self.X, "Y": self.Y})
+
+    @classmethod
+    def random(
+        cls,
+        grid_width: int,
+        grid_height: int,
+        n: int = 1,
+        exclude: Collection["Coordinate"] = frozenset(),
+    ) -> frozenset["Coordinate"]:
+        """Returns ``n`` random Coordinate (0<=x<=grid_width-1, 0<=y<=grid_height-1).
+
+        Each returned coordinate is guaranteed to not be in the exclusion set.
+        When n>1, each of the returned coordinates is guaranteed unique.
+        """
+        # this method is mostly used for generating new food, so in nearly every
+        # instance, drawing two random numbers will give us a random coordinate
+        # that is not in the exclude set
+        if n == 1:
+            candidate = Coordinate(
+                random.randint(0, (grid_width - 1)),
+                random.randint(0, (grid_height - 1)),
+            )
+            if candidate not in exclude:
+                return frozenset((candidate,))
+
+        # If we got here, we must have generated a coordinate in the exclude
+        # set, or we're generating multiple. So, rather than guess-and-check,
+        # just generate the set of all valid choices and choose one randomly.
+        grid_size = (grid_width) * (grid_height)  # +1 to account for column/row=0
+        if grid_size < (len(exclude)) + n:
+            raise Exception(f"Requested {n} random coords with {grid_size=} and {len(exclude)=}")
+
+        possible_coords = [
+            candidate
+            for x in range(grid_width)  # +1 because range end is non-inclusive
+            for y in range(grid_height)
+            if (candidate := Coordinate(x, y)) not in exclude
+        ]
+        random.shuffle(possible_coords)
+        return frozenset(possible_coords[:n])
+
 
 def manhattan_distance(xy1: tuple[int, int], xy2: tuple[int, int]) -> int:
     "Returns the Manhattan distance between points xy1 and xy2"
     return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
-
-
-class Node:
-    def __init__(self, x, y):
-        self.x = int(x)
-        self.y = int(y)
-        self.h = 0
-        self.g = 0
-        self.f = 1000000
-        self.parent = None
-
-    def print(self):
-        print(f"x: {self.x} y: {self.y}")
-
-    def equal(self, b):
-        return self.x == b.x and self.y == b.y
-
-
-class Grid:
-    def __init__(self):
-        self.grid = []
-
-        for i in range(20):
-            col = []
-            for j in range(20):
-                col.append(Node(i, j))
-            self.grid.append(col)
 
 
 def arg_max(
@@ -175,12 +216,14 @@ def timestamp() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-def get_timestamped_file_path(dir: Path, suffix: str) -> Path:
+def get_timestamped_file_path(dir: Path | str, suffix: str) -> Path:
     """Given a directory and suffix, returns a Path to a file whose name represents current time.
 
     If file already exists, this funcdtion will sleep for 1 second and retry 3 times before raising
     an exception.
     """
+    if isinstance(dir, str):
+        dir = Path(dir)
     file_path = (dir / timestamp()).with_suffix(suffix)
 
     retries = 3

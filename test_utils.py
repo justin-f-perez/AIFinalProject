@@ -1,7 +1,19 @@
+"""This module contains tests covering utils.py not "utilities for testing"."""
+
 import random
 
+import pytest
+
 from game import Game
-from utils import Direction, PriorityQueue
+from utils import Coordinate, Direction, PriorityQueue
+
+
+@pytest.mark.parametrize(
+    "pair",
+    ((x, y) for x in range(10) for y in range(10)),
+)
+def test_coord_tuple_equality(pair) -> None:
+    assert Coordinate(pair[0], pair[1]) == pair
 
 
 def test_priority_queue(game: Game) -> None:
@@ -23,3 +35,8 @@ def test_priority_queue(game: Game) -> None:
         for item in order:
             assert pq.pop() == item
     assert pq.empty
+
+
+@pytest.mark.parametrize("n", range(10))
+def test_coord_random(n):
+    assert len(Coordinate.random(n=n, grid_width=5, grid_height=5)) == n

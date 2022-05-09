@@ -1,123 +1,136 @@
 import abc
 import copy
 import importlib
+import logging
 import sys
-import time
-from typing import Any, Iterable, Mapping, TypeVar
+from dataclasses import dataclass, replace
+from typing import Any, Callable, Iterable, Mapping, TypeVar
 
 import pygame
 from rich.live import Live
 
+import agents
 from agents import BaseAgent
 from game import Game
-from stats import GameStats
 from utils import Direction
 from views import GameView, GraphicsGameView, HeadlessGameView
 
+# NOTE: Not in the dataclass or abstract base because we want these to be globally defined.
+#       This allows imported hook modules to wire themselves up to a known target.
 
-class Controller(abc.ABC):
-    def __init__(
-        self,
-        game: Game,
-        game_view: GameView,
-        frame_rate: int = 0,
-        auto_restart: bool = False,
-        harvest: int | None = None,
-    ) -> None:
-        self.game = game
+on_tick: list[Callable[["Controller", Live], None]] = []
+on_new_game: list[Callable[["Controller"], None]] = []
+on_game_over: list[Callable[["Controller"], None]] = []
+on_pygame_event: list[Callable[[pygame.event.Event], None]] = []
+
+
+class Stop(Exception):
+    """Signals a controller to stop the game."""
+
+    pass
+
+
+class Restart(Exception):
+    """Signals a controller to restart the game."""
+
+    pass
+
+
+@dataclass
+class _ControllerMixin:
+    game: Game
+    game_view: GameView
+    frame_rate: int = 0
+    auto_restart: bool = False
+    harvest: int | None = None
+
+    def __post_init__(self) -> None:
+        self.initial_game_state = copy.deepcopy(self.game)
         self.clock = pygame.time.Clock()
-        self.game_view = game_view
-        self.frame_rate = frame_rate
-        self.initial_game_state = copy.deepcopy(game)
-        self.auto_restart = auto_restart
-        self.harvest = harvest
 
+
+class LiveDisplayMixin:
+    live = Live()
+
+
+class Controller(abc.ABC, _ControllerMixin):
     @abc.abstractmethod
-    def get_action(self) -> Direction | None:
+    def get_action(self, events: list[pygame.event.Event]) -> Direction | None:
         ...
 
     def game_loop(self) -> None:
-        GameStats.track(self.game)
-        with Live(GameStats.rich_table(), auto_refresh=False, screen=True) as live:
-            while not self.game.game_over:  # single-game loop
-                self.game.update(self.get_action())
-                if self.game.score == self.harvest:
-                    self.game.game_over = True
-                self.game_view.update()
-                live.update(GameStats.rich_table())
-                live.refresh()
+        for new_game_hook in on_new_game:
+            new_game_hook(self)
+        with Live(auto_refresh=False, screen=True) as live:
+            while not self.game.game_over:
+                events = pygame.event.get()
+                for event_hook in on_pygame_event:
+                    for event in events:
+                        event_hook(event)
+                self.game = self.game.update(self.get_action(events=events))
+                for listener in on_tick:
+                    try:
+                        listener(self, live)
+                    except (Stop, Restart):
+                        raise
+                    except Exception as ex:
+                        raise Exception(f"A hook caused an unexpected error: {ex}")
+
                 self.clock.tick(self.frame_rate)
+
+    def game_over(self):
+        for game_over_hook in on_game_over:
+            game_over_hook(self)
 
     def run(self) -> None:
         while True:  # outer "restart" loop
-            self.game = copy.deepcopy(self.initial_game_state)
+            self.game = replace(self.initial_game_state)
             if isinstance(self.game_view, GraphicsGameView):
                 self.game_view.game = self.game
-            self.game_loop()
-            if self.auto_restart:
+            try:
+                self.game_loop()
+            except Stop:
+                pass
+            except Restart:
                 continue
-            # game over and no auto_restart, wait for user input to quit or restart
-            if isinstance(self.game_view, GraphicsGameView):
-                while True:
-                    restart = self.handle_restart_key(self.handle_quit_key(pygame.event.get()))
-                    if restart:
-                        break
-                    time.sleep(0.1)
+
+            try:
+                self.game_over()
+            except Restart:
+                continue
             else:
-                user_input = input("[R]estart or [Q]uit?")
-                while user_input not in "rRQq":
-                    user_input = input("[R]estart or [Q]uit?")
-                if user_input in "Qq":
-                    pygame.quit()
-                    sys.exit()
-
-    def handle_restart_key(self, events: list[pygame.event.Event]) -> bool:
-        """While this handler is listening, press R to restart.
-
-        Only relevant when graphics are being used. The implementation is somewhat naive and will
-        eventually crash due to recursion limit (somewhere around 1,000 restarts).
-        """
-        return any(
-            [event.type == pygame.KEYDOWN and event.key in {ord("R"), ord("r")} for event in events]
-        )
-
-    def handle_quit_key(self, events: list[pygame.event.Event]) -> list[pygame.event.Event]:
-        """Only relevant when graphics are being used. Makes escape key cause game to quit.
-
-        While escape key is not pressed, just passes through events.
-        """
-        if isinstance(self.game_view, GraphicsGameView):
-            escape = any(
-                [event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE for event in events]
-            )
-            if escape:
                 pygame.quit()
                 sys.exit()
-        return events
 
 
 class Keyboard(Controller):
-    def get_action(self) -> Direction | None:
+    def get_action(self, events: list[pygame.event.Event]) -> Direction | None:
         direction = None
-        for event in self.handle_quit_key(pygame.event.get()):
-            if event.type == pygame.KEYDOWN:
-                # ESC = Quit
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
+        for event in events:
+            if event.type != pygame.KEYDOWN:
+                continue
+            match event.key:
+                # fmt: off
+                case pygame.K_UP | pygame.K_w: direction = Direction.UP
+                case pygame.K_LEFT | pygame.K_a: direction = Direction.LEFT
+                case pygame.K_DOWN | pygame.K_s: direction = Direction.DOWN
+                case pygame.K_RIGHT | pygame.K_d: direction = Direction.RIGHT
+                case _: pass
+                # fmt: on
+
                 # W=Up; S=Down; A=Left; D=Right
-                key_map = {
-                    pygame.K_UP: Direction.UP,
-                    ord("w"): Direction.UP,
-                    pygame.K_LEFT: Direction.LEFT,
-                    ord("a"): Direction.LEFT,
-                    pygame.K_DOWN: Direction.DOWN,
-                    ord("s"): Direction.DOWN,
-                    pygame.K_RIGHT: Direction.RIGHT,
-                    ord("d"): Direction.RIGHT,
-                }
-                direction = key_map.get(event.key)
-        return direction
+                # key_map = {
+                #     pygame.K_UP: Direction.UP,
+                #     ord("w"): Direction.UP,
+                #     pygame.K_LEFT: Direction.LEFT,
+                #     ord("a"): Direction.LEFT,
+                #     pygame.K_DOWN: Direction.DOWN,
+                #     ord("s"): Direction.DOWN,
+                #     pygame.K_RIGHT: Direction.RIGHT,
+                #     ord("d"): Direction.RIGHT,
+                # }
+                # direction = key_map.get(event.key)
+        return direction if direction in self.game.snake.valid_actions else None
 
 
 A = TypeVar("A", bound=BaseAgent)
@@ -146,33 +159,39 @@ class Agent(Controller):
         """
         super().__init__(game_view=game_view or HeadlessGameView(), *args, **kwargs)  # type: ignore
         if isinstance(agent_class, str):
-            module_path, class_name = (
-                ".".join((parts := agent_class.split("."))[:-1]),
-                parts[-1],
-            )
-            AgentModule = importlib.import_module(module_path)
-            AgentClass: type[A] = getattr(AgentModule, class_name)
+            if "." in agent_class:
+                module_path, agent_class = agent_class.rsplit(".")
+                agent_module = importlib.import_module(module_path)
+            else:
+                agent_module = agents
+            AgentClass = getattr(agent_module, agent_class)
         else:
             AgentClass = agent_class
-        if agent_kwargs is None:
-            agent_kwargs = {}
+        agent_kwargs = agent_kwargs or {}
         self.agent_instance: A = AgentClass(*agent_args, **agent_kwargs)
-        self.actions: list[Direction] = []
+        self.actions: list[Direction | None] = []
+        self.action_history: list[Direction | None] = []
 
-    def get_action(self) -> Direction | None:
+    def get_action(self, events: list[pygame.event.Event]) -> Direction | None:
         """Effectively acts as an adapter between Game, View, and Agent"""
-        self.handle_quit_key(pygame.event.get())
-        if not self.actions:
+        if len(self.actions) == 0:
             new_actions: Iterable[Direction] | Direction | None = self.agent_instance.get_action(
                 self.game
             )
-            if isinstance(new_actions, Direction):
-                # This agent decided to return 1 action instead of a whole list.
-                # Wrap in a list so we can just treat both cases as the same.
-                new_actions = [new_actions]
-            elif not new_actions:
-                return None
-            # convert any other iterable type to list so we can pop()
-            self.actions = list(new_actions)
+            # If this agent decided to return a single action rather than a
+            # list, we wrap it in a list anyway so we can treat both cases the same
+            match new_actions:
+                case Direction():
+                    self.actions = [new_actions]
+                case None | [None] | (None,) | ():
+                    direction = self.game.snake.direction
+                    logging.info(f"Agent didn't provide an input. Continuing in {direction}")
+                    self.actions = [direction]
+                case [Direction(), *_] | (Direction(), *_):
+                    self.actions = list(new_actions)
+                case _:
+                    raise Exception(f"Agent didn't return a valid value! {new_actions=}")
 
-        return self.actions.pop(0)
+        next_action = self.actions.pop(0)
+        self.action_history.append(next_action)
+        return next_action

@@ -1,101 +1,100 @@
-import copy
 import logging
-import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
+from serializers import SerializerMixin
 from snake import Snake
 from utils import Coordinate, Direction
 
 
-@dataclass
-class Game:
-    grid_width: int
-    grid_height: int
+@dataclass(frozen=True, eq=True, order=True, kw_only=True, slots=True)
+class Game(SerializerMixin):
+    grid_width: int = 5
+    grid_height: int = 5
     snake: Snake = field(
         default_factory=lambda: Snake(
-            segments=[
+            segments=(
                 Coordinate(0, 1),
                 Coordinate(0, 0),
                 Coordinate(1, 0),
-            ],
-            direction=Direction.DOWN,
+            ),
         )
     )
-    food_count: int = 2
-    food: set[Coordinate] = field(default_factory=set)
+    food: frozenset[Coordinate] = field(
+        default_factory=lambda: Coordinate.random(grid_height=5, grid_width=5, n=2)
+    )
     score: int = 0
     # compare=false because tick is for statistics, not a part
     # of our representation of game state
     ticks: int = field(default=0, compare=False)
-    game_over: bool = False
 
-    def __post_init__(self) -> None:
-        for _ in range(self.food_count):
-            self.spawn_food()
+    def to_ascii(self):
+        FOOD_SYMBOL = "🍎"
+        BLANK_SYMBOL = "🔵"
+        SNAKE_SYMBOL = "🐍"
+        horizontal_border_row = ["☰" for _ in range(int((self.grid_width) * 2 + 2))]
+        grid_row = ["║"] + [BLANK_SYMBOL for _ in range(self.grid_width)] + ["║"]
+        grid = [grid_row.copy() for _ in range(self.grid_height)]
+        grid.insert(0, horizontal_border_row)
+        grid.append(horizontal_border_row)
 
-    def __hash__(self):
-        return hash(
-            (
-                self.grid_width,
-                self.grid_height,
-                tuple(self.snake._segments),
-                self.snake.direction,
-                frozenset(self.food),
-                self.score,
-                self.game_over,
-            )
-        )
+        try:
+            for s in self.snake.segments:
+                grid[s.Y + 1][s.X + 1] = SNAKE_SYMBOL
+        except Exception as ex:
+            logging.error(self.to_yaml())
+            logging.error(f"Bad segment: {s=}")
+            logging.exception(ex)
+            raise
+
+        try:
+            for f in self.food:
+                grid[f.Y + 1][f.X + 1] = FOOD_SYMBOL
+        except Exception as ex:
+            logging.error(self.to_yaml())
+            logging.error(f"Bad food: {f=}")
+            logging.exception(ex)
+            raise
+
+        return "\n".join("".join(line) for line in grid)
+
+    @property
+    def game_over(self) -> bool:
+        return self._check_game_over()
 
     @property
     def successors(self) -> "list[Game]":
         children: "list[Game]" = []
         if self.game_over:
             return children
-        for direction in self.snake.direction.next():
-            child = copy.deepcopy(self)
-            child.update(direction)
-            children.append(child)
-        return children
+        return [self.update(direction) for direction in self.snake.direction.next()]
 
-    def spawn_food(self) -> None:
+    def spawn_food(self) -> frozenset["Coordinate"]:
         """Adds a new piece of food at a random location.
         Ensures the new food piece doesn't overlap any existing piece.
         """
-        new_food = Coordinate(
-            random.randrange(0, (self.grid_width - 1)),
-            random.randrange(0, (self.grid_height - 1)),
+        return Coordinate.random(
+            exclude=self.food, grid_width=self.grid_width, grid_height=self.grid_height, n=1
         )
 
-        while new_food in self.food:
-            new_food = Coordinate(
-                random.randrange(0, (self.grid_width - 1)),
-                random.randrange(0, (self.grid_height - 1)),
-            )
-        logging.debug(f"Spawned {new_food=}")
-        self.food.add(new_food)
-
-    def update(self, direction: Direction | None = None) -> None:
+    def update(self, direction: Direction | None = None) -> "Game":
         if self.game_over:
-            logging.warning(f"Not updating because {self.game_over=}.")
-            return
-        self.ticks += 1
-        logging.debug(f"{self.snake.head=} {self.snake.direction=}")
-        if direction is not None:
-            self.snake.direction = direction
+            raise Exception(f"Can't update a game when {self.game_over=}.")
 
-        if self.snake_eating:
-            # snake length increases by 1 and eaten food piece moves to random location
-            logging.debug(f"Snake ate food at {self.snake.head=}")
-            self.food.remove(self.snake.head)
-            self.snake.move(grow=True)
-            self.spawn_food()
-            self.score += 1
-        else:
-            # handle the case where we didn't eat (and didn't grow)
-            self.snake.move(grow=False)
-        self.game_over = self.check_game_over()
+        eating = self.food_at(self.snake.head)
+        new_food = (frozenset(self.food) - eating) | (self.spawn_food() if eating else frozenset())
+        new_snake = self.snake.move(direction=direction, grow=len(eating) > 0)
+        new_state_changes = {
+            "ticks": self.ticks + 1,
+            "snake": new_snake,
+            "food": new_food,
+            "score": self.score + len(eating),
+        }
 
-    def check_game_over(self) -> bool:
+        new_state = replace(self, **new_state_changes)
+        logging.debug(f"STATE TRANSITION:\n{self}\n\t-\n\t\t{new_state}")
+        return new_state
+
+    def _check_game_over(self) -> bool:
         out_of_bounds = any(
             [
                 self.snake.head.X < 0,
@@ -108,32 +107,27 @@ class Game:
         if is_game_over:
             logging.debug(
                 f"Game over: {out_of_bounds=} {self.snake.ouroboros=}\n"
-                f"{self.snake.head=} {self.snake._segments=}"
+                f"{self.snake.head=} {self.snake.segments=}"
             )
         return is_game_over
 
-    @property
-    def snake_eating(self) -> Coordinate | None:
-        if self.snake.head in self.food:
-            return self.snake.head
-        return None
+    def food_at(self, coordinate: Coordinate) -> frozenset[Coordinate]:
+        return frozenset({coordinate}) & self.food
 
-    def make_observation(self, action: Direction) -> tuple["Game", float]:
+    def make_observation(self, action: Direction | None) -> tuple["Game", float]:
         """Return a simulated action.
 
         In particular, given a Direction, return the next
         Game state that it would lead to and the score delta*.
 
         Raises an exception if this state is game_over or action is invalid.
-        *Returns -inf in the case that the next state is game_over, the current
-        state is game_over, or the action is invalid.
+        *Returns -1 in the case that the next state is game_over.
         """
+        action = action or self.snake.direction
         if self.game_over:
             raise Exception(f"Cannot make observations on a game_over state {self=}")
         if action not in self.snake.direction.next():
             raise Exception(f"Action {action=} is invalid from state {self=}")
         (next_state,) = (s for s in self.successors if s.snake.direction == action)
-        score_delta = (
-            float("-inf") if next_state.game_over else float(next_state.score - self.score)
-        )
+        score_delta = float(-1) if next_state.game_over else float(next_state.score - self.score)
         return (next_state, score_delta)
