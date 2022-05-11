@@ -1,16 +1,3 @@
-# Final Project
-
-Request access on GitHub: https://github.com/meliakru/AIFinalProject
-
-## Members
-Justin Perez<br>
-Levin Leesemann<br>
-Melissa Krumm<br>
-Miaomiao Zou
-
-## Documents
-[Project Report](https://docs.google.com/document/d/14OXp7eeJq8z1no57VwKUTgWbHgY5yk8jf76AjHZQZYQ/edit?usp=sharing)<br>
-
 # Quick Start
 
 ## Create (or update) conda environment
@@ -61,7 +48,8 @@ def json_saver(ctl: controllers.Controller, _):
 
 controllers.on_tick.append(json_saver)
 ```
-* Live terminal display with game stats, Q values (`QQ` agent only), and real-time ASCII-art representation of game state, e.g.
+#### Live Terminal Display - Unicode Text Representation of Game State
+```
 🍎🔵🔵🔵🔵🔵🔵🔵🔵
 🐍🔵🔵🔵🔵🔵🔵🔵🔵
 🐍🍎🔵🔵🔵🔵🔵🐍🔵
@@ -70,6 +58,72 @@ controllers.on_tick.append(json_saver)
 🐍🔵🔵🔵🔵🔵🔵🐍🔵
 🐍🐍🐍🐍🐍🐍🐍🐍🔵
 🔵🔵🔵🔵🔵🔵🔵🔵🔵
+```
+
+#### Live Terminal Display -- Game History/Stats
+```
+┏━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ game # ┃ tick # ┃ score ┃
+┡━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ 8      │ 219    │ 27    │
+│ 7      │ 162    │ 20    │
+│ 6      │ 152    │ 19    │
+│ 5      │ 1      │ 0     │
+│ 4      │ 1      │ 0     │
+│ 3      │ 1      │ 0     │
+│ 2      │ 1      │ 0     │
+│ 1      │ 443    │ 46    │
+└────────┴────────┴───────┘
+```
+
+#### Live Terminal Display -- Q Agent Params
+```
+┏━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━┓
+┃ discount ┃ learning_rate ┃ learning_rat… ┃ exploration_… ┃ exploration_… ┃ discount ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━┩
+│ 0.99     │ 0.6292468477… │ 0.999         │ 0.3146234238… │ 0.999         │ 0.99     │
+└──────────┴───────────────┴───────────────┴───────────────┴───────────────┴──────────┘
+```
+
+
+
+#### Live Terminal Display - Q Value Summary Table
+```
+┏━━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ # total ┃ #[Q>0] ┃ #[Q=0] ┃ #[Q<0] ┃ #[Q=nan] ┃ #[Q=-inf] ┃ sum(Q)            ┃
+┡━━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ 30      │ 7      │ 0      │ 23     │ 0        │ 0         │ -5.87771361100647 │
+└─────────┴────────┴────────┴────────┴──────────┴───────────┴───────────────────┘
+```
+
+
+
+#### Live Terminal Display - Q Value Table
+```
+┏━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
+┃ <-🍎  ┃  🍎->  ┃ 🍎^   ┃ 🍎v   ┃  <-🐍  ┃ 🐍->  ┃ 🐍^   ┃ 🐍v    ┃ act      ┃ $        ┃
+┡━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
+│ False │ True  │ False │ True  │ False │ False │ False │ False │ Directi… │ -1.0422… │
+│ True  │ False │ True  │ False │ True  │ False │ True  │ False │ Directi… │ -0.9303… │
+│ True  │ True  │ True  │ True  │ False │ False │ False │ False │ Directi… │ -0.8432… │
+│ False │ True  │ False │ True  │ False │ True  │ False │ True  │ Directi… │ -0.8384… │
+│ True  │ True  │ True  │ True  │ False │ True  │ False │ True  │ Directi… │ -0.7941… │
+│ False │ True  │ False │ True  │ True  │ False │ True  │ False │ Directi… │ -0.7192… │
+│ False │ True  │ False │ True  │ False │ True  │ False │ True  │ Directi… │ -0.4185… │
+│ True  │ False │ True  │ False │ True  │ False │ True  │ False │ Directi… │ -0.2504… │
+│ True  │ True  │ True  │ True  │ True  │ False │ True  │ False │ Directi… │ -0.1660… │
+│ False │ True  │ False │ True  │ False │ False │ False │ False │ Directi… │ -0.1456… │
+│ False │ True  │ False │ True  │ True  │ False │ True  │ False │ Directi… │ -0.1436… │
+│ False │ True  │ False │ True  │ True  │ False │ True  │ False │ Directi… │ -0.1265… │
+│ True  │ True  │ True  │ True  │ False │ True  │ False │ True  │ Directi… │ -0.1030… │
+│ True  │ True  │ True  │ True  │ False │ False │ False │ False │ Directi… │ -0.0956… │
+│ False │ True  │ False │ True  │ False │ False │ False │ False │ Directi… │ -0.0896… │
+│ True  │ True  │ True  │ True  │ True  │ False │ True  │ False │ Directi… │ -0.0731… │
+│ False │ True  │ False │ True  │ False │ True  │ False │ True  │ Directi… │ -0.0611… │
+│ True  │ True  │ True  │ True  │ False │ True  │ False │ True  │ Directi… │ -0.0390… │
+│ True  │ True  │ True  │ True  │ False │ True  │ False │ True  │ Directi… │ -0.0346… │
+│ True  │ False │ True  │ False │ False │ True  │ False │ True  │ Directi… │ -0.0300… │
+```
 
 
 # DEVELOPMENT
