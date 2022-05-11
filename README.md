@@ -42,8 +42,34 @@ _Note: the shebang in the CLI executable assumes you've set up the conda environ
 ./run  --graphics --frame-rate 0 --debug agent TailChaser
 ```
 
-# Architecture
-All AI agents are defined in [agents.py](./agents.py). The primary state object is `Game`, defined in [game.py](./game.py) and it's child object, [`Snake`](./snake.py). Additionally, statistics are automatically saved to a `game-stats` subdirectory of this project directory every 100 game ticks by [stats.py](./stats.py). There are some additional abstractions in controllers.py and views.py to help all of the pieces work together. Finally, example usage of code can be found in the test files (each is prefixed with `test_`, see below for more details.)
+# Features
+* Multiple AI agents defined in [agents.py](./agents.py).
+* Immutable representation of [`Game`](./game.py) state.
+* Auto-saved [game stats and history](./stats.py) (saves to ./game-stats/ -- .csv files are summary, .txt files [auto-cleaned every run] show ASCII art of each time step)
+* Verbose logging, auto-cleaned (deleted) every run
+* [Lots](./test_agents.py) of [test](./test_game.py) [code](./test_serializers.py) to [demonstrate](./test_snake.py) [usage](./test_utils.py) for customization (each is prefixed with `test_`, see below for more details.)
+* [Serialization](./serializers.py) to multiple formats: ASCII-art, JSON, YAML
+* fully type annotated
+* Customization [hooks](./hooks.py) have full access to full game state, agent, and game controller
+```python
+import controllers
+import subprocess
+
+def json_saver(ctl: controllers.Controller, _):
+    print(ctl.game.to_json(), stream=open('mygame.json', 'w'))
+    subprocess.run("arbitrary_shell_cmd")
+
+controllers.on_tick.append(json_saver)
+```
+* Live terminal display with game stats, Q values (`QQ` agent only), and real-time ASCII-art representation of game state, e.g.
+🍎🔵🔵🔵🔵🔵🔵🔵🔵
+🐍🔵🔵🔵🔵🔵🔵🔵🔵
+🐍🍎🔵🔵🔵🔵🔵🐍🔵
+🐍🔵🔵🔵🔵🔵🔵🐍🔵
+🐍🔵🔵🔵🔵🔵🔵🐍🔵
+🐍🔵🔵🔵🔵🔵🔵🐍🔵
+🐍🐍🐍🐍🐍🐍🐍🐍🔵
+🔵🔵🔵🔵🔵🔵🔵🔵🔵
 
 
 # DEVELOPMENT
@@ -53,10 +79,20 @@ This step only needs to be completed once per clone. The [pre-commit](https://pr
 pre-commit install --install-hooks  # assumes conda env is activated
 ```
 
-# Running test code
+# TESTING
 
-Files prefixed with `test_` contain some test code for unit testing pieces of functionality. The part after `test_` corresponds to the implementation code being tested (e.g., `test_game.py` and `game.py`).
+Files prefixed with `test_` contain tests intended to be run via pytest. The part after `test_` corresponds to the file under test (e.g., `test_game.py` and `game.py`). Additionally, 
 
-```console
+Assuming you set up the suggested conda environment, you can just run:
+```bash
 ./run_tests
+./run_tests --help  # show pytest's --help
+./run_tests --timeout=1  # set timeout per-test to 1sec
+# etc.
+```
+Above is just a simple wrapper so you don't have to bother activating your conda env. All arguments you supply to `run_tests` are passed through to pytest.
+
+Otherwise, activate your environment with all of the installed dependencies and run:
+```bash
+pytest
 ```
