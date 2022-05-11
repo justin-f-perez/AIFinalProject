@@ -76,6 +76,8 @@ class Snake(SerializerMixin):
             )
 
     def move(self, direction: Direction | None, grow: bool) -> "Snake":
+        if direction is None:
+            direction = self.direction
         if direction not in self.valid_actions:
             raise Exception(f"Invalid movement direction {direction=}")
         new_x, new_y = self.head

@@ -33,17 +33,17 @@ _Note: the shebang in the CLI executable assumes you've set up the conda environ
 ./run --help
 
 # --graphics is implied for --keyboard
-./run --keyboard
+./run keyboard
 
 # set 0 frame-rate to disable frame throttling (update as fast as CPU allows)
-./run --agent agents.GentleBrute --graphics --frame-rate 0
-
+# NOTE: flags that aren't specific to agents must precede the "agent" subcommand
+./run --graphics --frame-rate 0 agent GentleBrute 
 # various flags for different log levels are available
-./run --agent agents.TailChaser --graphics --frame-rate 0 --debug
+./run  --graphics --frame-rate 0 --debug agent TailChaser
 ```
 
 # Architecture
-All of our AI agents are defined in [agents.py](./agents.py). The primary state object is `Game`, defined in [game.py](./game.py) and it's child object, [`Snake`](./snake.py). Additionally, statistics are automatically saved to a `game-stats` subdirectory of this project directory every 100 game ticks by [stats.py](./stats.py). There are some additional abstractions in controllers.py and views.py to help all of the pieces work together. Finally, example usage of code can be found in the test files (each is prefixed with `test_`, see below for more details.)
+All AI agents are defined in [agents.py](./agents.py). The primary state object is `Game`, defined in [game.py](./game.py) and it's child object, [`Snake`](./snake.py). Additionally, statistics are automatically saved to a `game-stats` subdirectory of this project directory every 100 game ticks by [stats.py](./stats.py). There are some additional abstractions in controllers.py and views.py to help all of the pieces work together. Finally, example usage of code can be found in the test files (each is prefixed with `test_`, see below for more details.)
 
 
 # DEVELOPMENT
